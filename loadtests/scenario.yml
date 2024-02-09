@@ -1,0 +1,28 @@
+modules:
+  local:
+    sequential: true
+  jmeter:
+    gui: false
+    properties:
+      baseurl: http://localhost:9000/api/v1
+
+execution:
+  - scenario: store-device-location
+    concurrency: 50
+    iterations: 100
+
+scenarios:
+  store-device-location:
+    requests:
+      - url: ${__P(baseurl)}/device/data/location
+        method: POST
+        headers:
+          Content-Type: application/json
+          X-Trace-Id: 165ebf22-d35e-4998-a414-d6bea035e79d
+        body: >
+          {
+            "device_id": "165ebf22-d35e-4998-a414-d6bea035e79d",
+            "latitude": 48,
+            "longitude": 38,
+            "time": 1707409346
+          }

@@ -1,0 +1,61 @@
+{
+  "type": "record",
+  "name": "DeviceLocationEvent",
+  "namespace": "org.tomohavvk.walker.protocol.events",
+  "fields": [
+    {
+      "name": "device_id",
+      "type": "string"
+    },
+    {
+      "name": "locations",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "DeviceLocation",
+          "fields": [
+            {
+              "name": "latitude",
+              "type": "double"
+            },
+            {
+              "name": "longitude",
+              "type": "double"
+            },
+            {
+              "name": "accuracy",
+              "type": "double"
+            },
+            {
+              "name": "altitude",
+              "type": "double"
+            },
+            {
+              "name": "speed",
+              "type": "double"
+            },
+            {
+              "name": "time",
+              "type": "long"
+            },
+            {
+              "name": "bearing",
+              "type": [
+                "null",
+                "double"
+              ]
+            },
+            {
+              "name": "altitudeAccuracy",
+              "type": [
+                "null",
+                "double"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

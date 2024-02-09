@@ -1,0 +1,6 @@
+target
+.idea
+version
+*.iml
+.bsp
+.DS_Store
