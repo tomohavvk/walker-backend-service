@@ -1,9 +1,9 @@
 package org.tomohavvk.walker.http.endpoints.bodies.examples
 
-import org.tomohavvk.walker.protocol.error.AppError
-import org.tomohavvk.walker.protocol.error.errors.BadRequestError
-import org.tomohavvk.walker.protocol.error.errors.InternalError
-import org.tomohavvk.walker.protocol.error.errors.NotFoundError
+import org.tomohavvk.walker.protocol.errors.AppError
+import org.tomohavvk.walker.protocol.errors.BadRequestError
+import org.tomohavvk.walker.protocol.errors.InternalError
+import org.tomohavvk.walker.protocol.errors.NotFoundError
 
 trait ErrorExamples {
 

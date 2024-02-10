@@ -1,3 +1,3 @@
-package org.tomohavvk.walker.protocol.error.views
+package org.tomohavvk.walker.protocol.views
 
 case class AcknowledgeView(acknowledged: Boolean = true)

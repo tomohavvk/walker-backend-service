@@ -1,4 +1,4 @@
-package org.tomohavvk.walker.protocol.error.views
+package org.tomohavvk.walker.protocol.views
 
 import org.tomohavvk.walker.protocol.Types.Latitude
 

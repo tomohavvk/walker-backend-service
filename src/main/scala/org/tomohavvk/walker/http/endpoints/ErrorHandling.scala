@@ -2,8 +2,9 @@ package org.tomohavvk.walker.http.endpoints
 
 import org.tomohavvk.walker.http.endpoints.codecs.ErrorCodecs
 import org.tomohavvk.walker.protocol.Types.HttpCode
-import org.tomohavvk.walker.protocol.error.AppError
-import org.tomohavvk.walker.protocol.error.errors.HttpError
+import org.tomohavvk.walker.protocol.errors
+import org.tomohavvk.walker.protocol.errors.AppError
+import org.tomohavvk.walker.protocol.errors.HttpError
 import sttp.model.Header
 import sttp.model.StatusCode
 import sttp.tapir.Codec.JsonCodec
@@ -39,7 +40,7 @@ trait ErrorHandling {
   ): ValuedEndpointOutput[_] =
     ValuedEndpointOutput(
       statusCode.and(headers).and(customCodecJsonBody[AppError]),
-      (c, hs, HttpError(m, HttpCode(c.code)))
+      (c, hs, errors.HttpError(m, HttpCode(c.code)))
     )
 
   private def failureMessage(ctx: DecodeFailureContext): String = {

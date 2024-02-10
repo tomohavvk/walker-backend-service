@@ -1,7 +1,7 @@
 package org.tomohavvk.walker.http.endpoints.bodies
 
 import org.tomohavvk.walker.http.endpoints.bodies.examples.ErrorExamples
-import org.tomohavvk.walker.protocol.error.AppError
+import org.tomohavvk.walker.protocol.errors.AppError
 import sttp.tapir.Codec.JsonCodec
 import sttp.tapir.EndpointIO.Body
 import sttp.tapir.customCodecJsonBody

@@ -1,7 +1,9 @@
-package org.tomohavvk.walker.protocol.error.errors
+package org.tomohavvk.walker.protocol.errors
 
-import org.tomohavvk.walker.protocol.Types._
-import org.tomohavvk.walker.protocol.error.AppError
+import org.tomohavvk.walker.protocol.Types.ApiErrorMessage
+import org.tomohavvk.walker.protocol.Types.ErrorCode
+import org.tomohavvk.walker.protocol.Types.HttpCode
+import org.tomohavvk.walker.protocol.Types.LogErrorMessage
 
 case class BadRequestError(internalMessage: String, message: String = "Internal Error")
     extends AppError(apiMessage = ApiErrorMessage(message),

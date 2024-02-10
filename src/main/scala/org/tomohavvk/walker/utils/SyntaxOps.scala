@@ -3,7 +3,7 @@ package org.tomohavvk.walker.utils
 import cats.Applicative
 import cats.data.EitherT
 import cats.data.Kleisli
-import org.tomohavvk.walker.protocol.error.AppError
+import org.tomohavvk.walker.protocol.errors.AppError
 
 trait AnySyntax {
 

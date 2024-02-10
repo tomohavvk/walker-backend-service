@@ -1,7 +1,7 @@
 package org.tomohavvk.walker.http.endpoints.schemas
 
 import org.tomohavvk.walker.protocol.Types._
-import org.tomohavvk.walker.protocol.error.AppError
+import org.tomohavvk.walker.protocol.errors.AppError
 import sttp.tapir.Schema._
 import sttp.tapir.SchemaType.SProductField
 import sttp.tapir.FieldName

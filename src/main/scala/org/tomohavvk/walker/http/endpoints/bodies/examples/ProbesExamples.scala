@@ -1,6 +1,6 @@
 package org.tomohavvk.walker.http.endpoints.bodies.examples
 
-import org.tomohavvk.walker.protocol.error.views.ProbeView
+import org.tomohavvk.walker.protocol.views.ProbeView
 
 trait ProbesExamples {
 

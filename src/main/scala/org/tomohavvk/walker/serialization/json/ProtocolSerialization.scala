@@ -18,11 +18,11 @@ import org.tomohavvk.walker.protocol.Types.Latitude
 import org.tomohavvk.walker.protocol.Types.Longitude
 import org.tomohavvk.walker.protocol.Types.Speed
 import org.tomohavvk.walker.protocol.Types.UnixTime
-import org.tomohavvk.walker.protocol.error.AppError
-import org.tomohavvk.walker.protocol.error.errors.InternalError
-import org.tomohavvk.walker.protocol.error.views.AcknowledgeView
-import org.tomohavvk.walker.protocol.error.views.DeviceLocationView
-import org.tomohavvk.walker.protocol.error.views.ProbeView
+import org.tomohavvk.walker.protocol.errors.AppError
+import org.tomohavvk.walker.protocol.errors.InternalError
+import org.tomohavvk.walker.protocol.views.AcknowledgeView
+import org.tomohavvk.walker.protocol.views.DeviceLocationView
+import org.tomohavvk.walker.protocol.views.ProbeView
 
 trait ProtocolSerialization extends CirceConfig {
 

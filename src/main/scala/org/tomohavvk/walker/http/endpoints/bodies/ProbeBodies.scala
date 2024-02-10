@@ -1,7 +1,7 @@
 package org.tomohavvk.walker.http.endpoints.bodies
 
 import org.tomohavvk.walker.http.endpoints.bodies.examples.ProbesExamples
-import org.tomohavvk.walker.protocol.error.views.ProbeView
+import org.tomohavvk.walker.protocol.views.ProbeView
 import sttp.tapir.Codec.JsonCodec
 import sttp.tapir.EndpointIO.Body
 import sttp.tapir.customCodecJsonBody

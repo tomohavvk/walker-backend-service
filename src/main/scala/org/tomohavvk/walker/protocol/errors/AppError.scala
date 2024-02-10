@@ -1,4 +1,4 @@
-package org.tomohavvk.walker.protocol.error
+package org.tomohavvk.walker.protocol.errors
 
 import org.tomohavvk.walker.protocol.Types.ApiErrorMessage
 import org.tomohavvk.walker.protocol.Types.ErrorCode

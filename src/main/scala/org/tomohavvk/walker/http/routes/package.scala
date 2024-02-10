@@ -9,8 +9,8 @@ import cats.syntax.either._
 import io.odin.Logger
 import org.http4s.HttpRoutes
 import org.tomohavvk.walker.http.endpoints.EndpointError
-import org.tomohavvk.walker.protocol.error.AppError
-import org.tomohavvk.walker.protocol.error.errors.InternalError
+import org.tomohavvk.walker.protocol.errors.AppError
+import org.tomohavvk.walker.protocol.errors.InternalError
 import org.tomohavvk.walker.utils.ContextFlow
 import org.tomohavvk.walker.utils.LogContext
 import org.tomohavvk.walker.utils.anySyntax

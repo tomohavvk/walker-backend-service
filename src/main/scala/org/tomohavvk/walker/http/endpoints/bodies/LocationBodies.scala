@@ -1,8 +1,8 @@
 package org.tomohavvk.walker.http.endpoints.bodies
 
 import org.tomohavvk.walker.http.endpoints.bodies.examples.LocationExamples
-import org.tomohavvk.walker.protocol.error.views.AcknowledgeView
-import org.tomohavvk.walker.protocol.error.views.DeviceLocationView
+import org.tomohavvk.walker.protocol.views.AcknowledgeView
+import org.tomohavvk.walker.protocol.views.DeviceLocationView
 import sttp.tapir.Codec.JsonCodec
 import sttp.tapir.EndpointIO.Body
 import sttp.tapir.customCodecJsonBody

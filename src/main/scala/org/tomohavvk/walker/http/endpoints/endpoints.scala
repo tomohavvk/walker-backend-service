@@ -1,6 +1,6 @@
 package org.tomohavvk.walker.http
 
-import org.tomohavvk.walker.protocol.error.AppError
+import org.tomohavvk.walker.protocol.errors.AppError
 import sttp.model.StatusCode
 import sttp.tapir.Endpoint
 import sttp.tapir.endpoint

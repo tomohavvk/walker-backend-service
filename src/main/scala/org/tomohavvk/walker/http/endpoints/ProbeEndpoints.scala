@@ -4,7 +4,7 @@ import org.tomohavvk.walker.http.endpoints.bodies.ProbeBodies
 import org.tomohavvk.walker.http.endpoints.codecs.ErrorCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.ProbeCodecs
 import org.tomohavvk.walker.http.endpoints.mappings.ErrorMappings
-import org.tomohavvk.walker.protocol.error.views.ProbeView
+import org.tomohavvk.walker.protocol.views.ProbeView
 import sttp.model.StatusCode
 import sttp.tapir._
 

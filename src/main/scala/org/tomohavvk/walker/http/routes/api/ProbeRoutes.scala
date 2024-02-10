@@ -8,7 +8,7 @@ import org.http4s.HttpRoutes
 import org.tomohavvk.walker.http.endpoints.ProbeEndpoints
 import org.tomohavvk.walker.http.routes.MappedHttp4sHttpEndpoint
 import org.tomohavvk.walker.http.routes.api.ProbeRoutes.probeView
-import org.tomohavvk.walker.protocol.error.views.ProbeView
+import org.tomohavvk.walker.protocol.views.ProbeView
 import org.tomohavvk.walker.utils.ContextFlow
 import sttp.model.StatusCode.Ok
 import sttp.tapir.server.http4s.Http4sServerOptions

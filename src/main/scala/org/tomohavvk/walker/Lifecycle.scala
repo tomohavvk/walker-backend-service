@@ -15,11 +15,11 @@ import org.tomohavvk.walker.http.server.HttpServer
 import org.tomohavvk.walker.module.Configs
 import org.tomohavvk.walker.streams.DeviceLocationEventStream
 
-class Lifecycle[F[_]: Async: Console](
+class Lifecycle[F[_]: Async: Console, B[_]](
   configs:     Configs,
   logger:      Logger[F],
   httpServer:  HttpServer[F],
-  eventStream: DeviceLocationEventStream[F]) {
+  eventStream: DeviceLocationEventStream[F, B]) {
 
   private val startHttpServer: F[Unit] =
     httpServer.start >>
