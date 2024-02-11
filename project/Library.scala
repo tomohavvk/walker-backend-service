@@ -12,7 +12,7 @@ object Library {
     val doobie        = "1.0.0-RC5"
     val enumeratum    = "1.7.2"
     val flyway        = "9.16.0"
-    val fs2Kafka        = "3.2.0"
+    val fs2Kafka      = "3.2.0"
     val kindProjector = "0.13.2"
     val newtype       = "0.4.4"
     val odin          = "0.13.0"
@@ -32,7 +32,7 @@ object Library {
     val sttp       = "com.softwaremill.sttp"
     val tpolecat   = "org.tpolecat"
     val typeLevel  = "org.typelevel"
-    val fs2  = "com.github.fd4s"
+    val fs2        = "com.github.fd4s"
   }
 
   object Cats {
@@ -41,8 +41,8 @@ object Library {
   }
 
   object Doobie {
-    val core = orgs.tpolecat %% "doobie-core" % versions.doobie
-    val hikari = orgs.tpolecat %% "doobie-hikari" % versions.doobie
+    val core     = orgs.tpolecat %% "doobie-core"     % versions.doobie
+    val hikari   = orgs.tpolecat %% "doobie-hikari"   % versions.doobie
     val postgres = orgs.tpolecat %% "doobie-postgres" % versions.doobie
   }
 
@@ -95,22 +95,22 @@ object Library {
   }
 
   object Tests {
-    val catsScalaTest       = orgs.typeLevel               %% "cats-effect-testing-scalatest" % "1.4.0"
-    val munitCatsEffect     = orgs.typeLevel                  %% "munit-cats-effect-3"           % "1.0.7"
-    val scalaMock           = "org.scalamock"              %% "scalamock-scalatest-support"   % "3.6.0"
-    val scalaTest           = "org.scalatest"              %% "scalatest"                     % "3.2.15"
+    val catsScalaTest   = orgs.typeLevel  %% "cats-effect-testing-scalatest" % "1.4.0"
+    val munitCatsEffect = orgs.typeLevel  %% "munit-cats-effect-3"           % "1.0.7"
+    val scalaMock       = "org.scalamock" %% "scalamock-scalatest-support"   % "3.6.0"
+    val scalaTest       = "org.scalatest" %% "scalatest"                     % "3.2.15"
   }
 
   val testLibs = Seq(
-    Tests.scalaMock           % "test",
-    Tests.scalaTest           % "test",
-    Tests.munitCatsEffect     % "test",
-    Tests.catsScalaTest       % "test"
+    Tests.scalaMock       % "test",
+    Tests.scalaTest       % "test",
+    Tests.munitCatsEffect % "test",
+    Tests.catsScalaTest   % "test"
   )
 
   val appLibs = Seq(
-  "org.slf4j" % "slf4j-api" % "2.0.0-alpha5",
-  "ch.qos.logback" % "logback-classic" % "1.4.8",
+//  "org.slf4j" % "slf4j-api" % "2.0.0-alpha5",
+//  "ch.qos.logback" % "logback-classic" % "1.4.8",
     Cats.catsCore,
     Circe.genericExtras,
     Circe.parser,

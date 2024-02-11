@@ -4,7 +4,6 @@ import org.tomohavvk.walker.http.endpoints.codecs.ErrorCodecs
 import org.tomohavvk.walker.protocol.Types.HttpCode
 import org.tomohavvk.walker.protocol.errors
 import org.tomohavvk.walker.protocol.errors.AppError
-import org.tomohavvk.walker.protocol.errors.HttpError
 import sttp.model.Header
 import sttp.model.StatusCode
 import sttp.tapir.Codec.JsonCodec

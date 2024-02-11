@@ -10,7 +10,7 @@ trait DeviceLocationStatements extends DoobieMeta {
 
   def upsertQuery(entities: List[DeviceLocationEntity]): doobie.ConnectionIO[Int] = {
     val sqlStatement =
-      """INSERT INTO devices_locations (deviceId, latitude, longitude, accuracy, altitude, speed, bearing, altitude_accuracy, time)
+      """INSERT INTO devices_locations (device_id, latitude, longitude, accuracy, altitude, speed, bearing, altitude_accuracy, time)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(device_id,time) DO NOTHING""".stripMargin
 
@@ -18,7 +18,7 @@ trait DeviceLocationStatements extends DoobieMeta {
   }
 
   def findLastByIdSQuery(deviceId: DeviceId): doobie.Query0[DeviceLocationEntity] =
-    fr"""SELECT deviceId, latitude, longitude, accuracy, altitude, speed, bearing, altitude_accuracy, time
+    fr"""SELECT device_id, latitude, longitude, accuracy, altitude, speed, bearing, altitude_accuracy, time
          FROM devices_locations WHERE device_id = $deviceId ORDER BY time DESC LIMIT 1"""
       .query[DeviceLocationEntity]
 }

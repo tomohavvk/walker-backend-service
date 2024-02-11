@@ -10,7 +10,6 @@ import org.tomohavvk.walker.utils.LiftConnectionIO.FromOptionFPartiallyApplied
 import org.tomohavvk.walker.utils.LiftConnectionIO.SqlErrorHandler
 
 import java.sql.SQLException
-import scala.language.implicitConversions
 
 trait LiftConnectionIO[F[_], E] {
 
@@ -31,10 +30,8 @@ object LiftConnectionIO {
       override def lift[A](
         cio:                   ConnectionIO[A]
       )(implicit errorHandler: SqlErrorHandler[E]
-      ): EitherT[ConnectionIO, E, A] = {
-
+      ): EitherT[ConnectionIO, E, A] =
         EitherT.apply(cio.attemptSql.map(_.leftMap(errorHandler)))
-      }
 
     }
 

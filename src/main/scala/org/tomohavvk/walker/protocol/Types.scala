@@ -2,7 +2,6 @@ package org.tomohavvk.walker.protocol
 
 import io.estatico.newtype.macros.newtype
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 object Types {

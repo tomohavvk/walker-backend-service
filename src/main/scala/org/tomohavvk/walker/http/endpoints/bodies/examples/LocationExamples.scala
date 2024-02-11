@@ -9,7 +9,6 @@ import org.tomohavvk.walker.protocol.Types.Latitude
 import org.tomohavvk.walker.protocol.Types.Longitude
 import org.tomohavvk.walker.protocol.Types.Speed
 import org.tomohavvk.walker.protocol.Types.UnixTime
-import org.tomohavvk.walker.protocol.views.AcknowledgeView
 import org.tomohavvk.walker.protocol.views.DeviceLocationView
 
 import java.time.LocalDateTime

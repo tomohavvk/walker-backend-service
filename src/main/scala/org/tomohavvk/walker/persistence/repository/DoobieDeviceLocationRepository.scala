@@ -10,10 +10,8 @@ class DoobieDeviceLocationRepository[F[_]](implicit F: LiftConnectionIO[F, AppEr
     extends DeviceLocationRepository[F]
     with DeviceLocationStatements {
 
-  override def upsertBatch(entities: List[DeviceLocationEntity]): F[Int] = {
-    println(2)
+  override def upsertBatch(entities: List[DeviceLocationEntity]): F[Int] =
     F.lift(upsertQuery(entities))
-  }
 
   override def findLastById(deviceId: DeviceId): F[Option[DeviceLocationEntity]] =
     F.lift(findLastByIdSQuery(deviceId).option)

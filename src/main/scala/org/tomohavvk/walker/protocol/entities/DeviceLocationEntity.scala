@@ -8,7 +8,8 @@ import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.Latitude
 import org.tomohavvk.walker.protocol.Types.Longitude
 import org.tomohavvk.walker.protocol.Types.Speed
-import org.tomohavvk.walker.protocol.Types.UnixTime
+
+import java.time.LocalDateTime
 
 case class DeviceLocationEntity(
   deviceId:         DeviceId,
@@ -19,4 +20,4 @@ case class DeviceLocationEntity(
   speed:            Speed,
   bearing:          Bearing,
   altitudeAccuracy: AltitudeAccuracy,
-  time:             UnixTime)
+  time:             LocalDateTime)

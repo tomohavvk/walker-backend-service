@@ -11,7 +11,6 @@ import fs2.kafka.vulcan.AvroSettings
 import fs2.kafka.vulcan.SchemaRegistryClientSettings
 import fs2.kafka.vulcan.avroDeserializer
 import org.tomohavvk.walker.EventConsumer
-import org.tomohavvk.walker.config.AppConfig
 import org.tomohavvk.walker.config.ConsumerConfig
 import org.tomohavvk.walker.config.DatabaseConfig
 import org.tomohavvk.walker.protocol.Types.Key
@@ -27,8 +26,8 @@ object ResourceModule extends EventCodecs {
 
   def make[F[_]: Async](configs: Configs): Resource[F, ResourcesDeps[F]] =
     for {
-    //  transactor <- makeTransactor(configs.database)
-      consumer   <- makeConsumerResource[F, Event](configs.deviceLocationEventConsumer)
+      //  transactor <- makeTransactor(configs.database)
+      consumer <- makeConsumerResource[F, Event](configs.deviceLocationEventConsumer)
     } yield ResourcesDeps[F](EventConsumer(configs.deviceLocationEventConsumer.topic, consumer))
 
   private def makeConsumerResource[F[_]: Async, V: Codec](

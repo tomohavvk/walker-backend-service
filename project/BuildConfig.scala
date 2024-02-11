@@ -23,7 +23,8 @@ object BuildConfig {
     "-language:higherKinds",
     "-language:postfixOps",
     "-Ypartial-unification",
-    "-language:implicitConversions"
+    "-language:implicitConversions",
+    "-Ywarn-unused-import"
   )
 
   val additionalSettings: Seq[Def.Setting[_]] = Seq(

@@ -1,6 +1,5 @@
 package org.tomohavvk.walker.module
 
-import cats.effect.kernel.Sync
 import org.tomohavvk.walker.persistence.repository.DeviceLocationRepository
 import org.tomohavvk.walker.persistence.repository.DoobieDeviceLocationRepository
 import org.tomohavvk.walker.protocol.errors.AppError

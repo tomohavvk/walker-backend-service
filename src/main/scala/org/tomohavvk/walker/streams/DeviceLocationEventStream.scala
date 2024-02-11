@@ -1,6 +1,5 @@
 package org.tomohavvk.walker.streams
 
-import cats.effect.kernel.Async
 import cats.effect.kernel.Clock
 import cats.effect.kernel.Sync
 import cats.implicits.catsSyntaxFlatMapOps
@@ -14,10 +13,12 @@ import org.tomohavvk.walker.protocol.Types.AltitudeAccuracy
 import org.tomohavvk.walker.protocol.Types.Bearing
 import org.tomohavvk.walker.protocol.Types.Key
 import org.tomohavvk.walker.protocol.entities.DeviceLocationEntity
-import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.events.DeviceLocationEvent
 import org.tomohavvk.walker.protocol.events.Event
-import org.tomohavvk.walker.utils.LiftEitherF
+
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class DeviceLocationEventStream[F[_]: Sync: Clock, B[_]](
   repository:    DeviceLocationRepository[B],
@@ -32,13 +33,12 @@ class DeviceLocationEventStream[F[_]: Sync: Clock, B[_]](
         .evalMap { committable =>
           committable.record.value.event match {
             case event: DeviceLocationEvent =>
-              transactor
-                .withTxn {
-                  println(1)
-                  repository.upsertBatch(makeEntities(event))
-                }
-                .as(committable)
-
+              logger.info(event.locations.mkString) >>
+                transactor
+                  .withTxn {
+                    repository.upsertBatch(makeEntities(event))
+                  }
+                  .as(committable)
           }
         }
         .evalMap(_.offset.commit)
@@ -52,6 +52,9 @@ class DeviceLocationEventStream[F[_]: Sync: Clock, B[_]](
         .withFieldConst(_.deviceId, event.deviceId)
         .withFieldComputed(_.bearing, _.bearing.getOrElse(Bearing(0)))
         .withFieldComputed(_.altitudeAccuracy, _.altitudeAccuracy.getOrElse(AltitudeAccuracy(0)))
+        .withFieldComputed(_.time,
+                           l => LocalDateTime.ofInstant(Instant.ofEpochMilli(l.time.value * 1000), ZoneOffset.UTC)
+        )
         .transform
     }
 }

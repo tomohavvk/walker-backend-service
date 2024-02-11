@@ -7,7 +7,6 @@ import sttp.tapir.SchemaType.SProductField
 import sttp.tapir.FieldName
 import sttp.tapir.Schema
 import sttp.tapir.SchemaType
-import sttp.tapir.Validator
 import sttp.tapir.generic.Configuration
 
 trait EndpointSchemas {
