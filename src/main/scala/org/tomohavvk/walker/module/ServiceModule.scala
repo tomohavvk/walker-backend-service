@@ -1,6 +1,6 @@
 package org.tomohavvk.walker.module
 
-import cats.effect.kernel.Sync
+import cats.effect.kernel.{Clock, Spawn, Sync}
 import io.odin.Logger
 import org.tomohavvk.walker.module.RepositoryModule.RepositoriesDeps
 import org.tomohavvk.walker.persistence.Transactor

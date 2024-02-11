@@ -21,16 +21,15 @@ import org.tomohavvk.walker.serialization.avro.EventCodecs
 import java.nio.charset.StandardCharsets
 
 case class ResourcesDeps[F[_]](
-  transactor:                  HikariTransactor[F],
   deviceLocationEventConsumer: EventConsumer[F, Key, Event])
 
 object ResourceModule extends EventCodecs {
 
   def make[F[_]: Async](configs: Configs): Resource[F, ResourcesDeps[F]] =
     for {
-      transactor <- makeTransactor(configs.database)
+    //  transactor <- makeTransactor(configs.database)
       consumer   <- makeConsumerResource[F, Event](configs.deviceLocationEventConsumer)
-    } yield ResourcesDeps[F](transactor, EventConsumer(configs.deviceLocationEventConsumer.topic, consumer))
+    } yield ResourcesDeps[F](EventConsumer(configs.deviceLocationEventConsumer.topic, consumer))
 
   private def makeConsumerResource[F[_]: Async, V: Codec](
     consumerConfig: ConsumerConfig
