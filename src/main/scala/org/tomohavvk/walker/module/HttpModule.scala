@@ -6,9 +6,9 @@ import org.tomohavvk.walker.http.server.HttpServer
 
 object HttpModule {
 
-  def make[F[_]: Async](
+  def make[F[_]: Async, B[_]](
     routes:               RoutesDeps[F]
-  )(implicit environment: Environment[F]
+  )(implicit environment: Environment[F, B]
   ): HttpServer[F] =
     new HttpServer(environment.configs.server, routes)
 }

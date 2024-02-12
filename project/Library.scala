@@ -78,10 +78,11 @@ object Library {
   }
 
   object Utils {
-    val chimney         = orgs.scalaland  %% "chimney"          % versions.chimney
-    val newType         = orgs.estatico   %% "newtype"          % versions.newtype
-    val enumeratum      = orgs.enumeratum %% "enumeratum"       % versions.enumeratum
-    val enumeratumCirce = orgs.enumeratum %% "enumeratum-circe" % versions.enumeratum
+    val chimney         = orgs.scalaland        %% "chimney"          % versions.chimney
+    val newType         = orgs.estatico         %% "newtype"          % versions.newtype
+    val enumeratum      = orgs.enumeratum       %% "enumeratum"       % versions.enumeratum
+    val enumeratumCirce = orgs.enumeratum       %% "enumeratum-circe" % versions.enumeratum
+    val nanoid          = "com.aventrix.jnanoid" % "jnanoid"          % "1.0.1"
   }
 
   object CompilerPlugins {
@@ -135,6 +136,7 @@ object Library {
     Utils.chimney,
     Utils.enumeratum,
     Utils.enumeratumCirce,
+    Utils.nanoid,
     Utils.newType
   ) ++ testLibs
 }

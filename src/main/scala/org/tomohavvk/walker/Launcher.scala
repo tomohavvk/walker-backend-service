@@ -26,7 +26,7 @@ object Launcher extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     Environment
-      .make[AppEffect]
+      .make[AppEffect, DbEffect]
       .flatMap {
         case Right(env) =>
           EitherT.liftF[IO, AppError, ExitCode](TransactorModule.make[AppEffect, DbEffect, IO](env.configs).use {
@@ -39,7 +39,7 @@ object Launcher extends IOApp {
       .flatMap(handleResult)
 
   private def runApp(
-    implicit environment: Environment[AppEffect],
+    implicit environment: Environment[AppEffect, DbEffect],
     transactor:           Transactor[AppEffect, DbEffect]
   ): AppEffect[ExitCode] =
     new Application[AppEffect, DbEffect].run()

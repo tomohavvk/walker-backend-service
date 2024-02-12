@@ -16,12 +16,12 @@ import sttp.tapir.server.interceptor.exception.DefaultExceptionHandler
 
 object RoutesModule {
 
-  def make[F[_]: Async](
+  def make[F[_]: Async, B[_]](
     endpoints:            Endpoints,
     services:             ServicesDeps[F]
-  )(implicit environment: Environment[F]
+  )(implicit environment: Environment[F, B]
   ): RoutesDeps[F] = {
-    implicit val logger: Logger[ContextFlow[F, *]] = environment.contextLogger
+    implicit val logger: Logger[ContextFlow[F, *]] = environment.contextLoggerF
     implicit val option: Http4sServerOptions[F]    = makeOptions(environment.codecs)
 
     RoutesDeps[F](

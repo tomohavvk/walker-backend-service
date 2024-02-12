@@ -44,10 +44,12 @@ object ResourceModule extends EventCodecs {
       ConsumerSettings[F, Key, V]
         .withBootstrapServers(consumerConfig.bootstrapServers)
         .withGroupId(consumerConfig.groupId)
-        .withPollTimeout(consumerConfig.pollingTimeout)
+        .withMaxPollInterval(consumerConfig.pollingTimeout)
+//        .withMaxPollRecords(100)
+//        .withMaxPrefetchBatches(100)
         .withRequestTimeout(consumerConfig.requestTimeout)
         .withCloseTimeout(consumerConfig.closeTimeout)
-        .withAutoOffsetReset(AutoOffsetReset.Latest)
+        .withAutoOffsetReset(AutoOffsetReset.Earliest)
 
     KafkaConsumer.resource(consumerSettings)
   }

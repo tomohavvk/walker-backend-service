@@ -2,6 +2,7 @@ package org.tomohavvk.walker.streams
 
 import cats.effect.kernel.Clock
 import cats.effect.kernel.Sync
+import cats.effect.kernel.Temporal
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFunctorOps
 import io.odin.Logger
@@ -18,8 +19,11 @@ import org.tomohavvk.walker.services.LocationService
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import fs2.kafka._
 
-class DeviceLocationEventStream[F[_]: Sync: Clock, B[_]](
+import scala.concurrent.duration.DurationInt
+
+class DeviceLocationEventStream[F[_]: Temporal: Clock, B[_]](
   locationService: LocationService[F],
   eventConsumer:   EventConsumer[F, Key, Event],
   logger:          Logger[F]) {
@@ -31,13 +35,13 @@ class DeviceLocationEventStream[F[_]: Sync: Clock, B[_]](
         .evalMap { committable =>
           committable.record.value.event match {
             case event: DeviceLocationEvent =>
-              logger.info(event.locations.toString()) >>
-                locationService
-                  .upsertBatch(event.deviceId, makeEntities(event))
-                  .as(committable)
+              //  logger.info(event.locations.toString()) >>
+              locationService
+                .upsertBatch(event.deviceId, makeEntities(event))
+                .as(committable.offset)
           }
         }
-        .evalMap(_.offset.commit)
+        .through(commitBatchWithin(200, 1.seconds))
         .debug()
         .compile
         .drain
@@ -50,9 +54,7 @@ class DeviceLocationEventStream[F[_]: Sync: Clock, B[_]](
           .withFieldConst(_.deviceId, event.deviceId)
           .withFieldComputed(_.bearing, _.bearing.getOrElse(Bearing(0)))
           .withFieldComputed(_.altitudeAccuracy, _.altitudeAccuracy.getOrElse(AltitudeAccuracy(0)))
-          .withFieldComputed(_.time,
-                             l => LocalDateTime.ofInstant(Instant.ofEpochMilli(l.time.value * 1000), ZoneOffset.UTC)
-          )
+          .withFieldComputed(_.time, l => LocalDateTime.ofInstant(Instant.ofEpochMilli(l.time.value), ZoneOffset.UTC))
           .transform
       }
 }

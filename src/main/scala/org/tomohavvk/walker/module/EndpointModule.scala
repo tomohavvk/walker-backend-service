@@ -7,7 +7,7 @@ case class Endpoints(probe: ProbeEndpoints, marketFeed: LocationEndpoints)
 
 object EndpointModule {
 
-  def make[F[_]](implicit environment: Environment[F]): Endpoints = {
+  def make[F[_], B[_]](implicit environment: Environment[F, B]): Endpoints = {
     import environment.codecs._
     Endpoints(
       new ProbeEndpoints()(probe, errorCodecs),

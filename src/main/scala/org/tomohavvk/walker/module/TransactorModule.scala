@@ -6,10 +6,10 @@ import cats.effect.kernel.MonadCancelThrow
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
+import doobie.util.log.LogHandler.jdkLogHandler
 import org.tomohavvk.walker.config.DatabaseConfig
 import org.tomohavvk.walker.persistence.PostgresTransactor
 import org.tomohavvk.walker.persistence.Transactor
-
 import org.tomohavvk.walker.utils.TransactConnectionIO
 
 case class TransactorDeps[F[_], B[_]](transactor: Transactor[F, B])
@@ -27,8 +27,9 @@ object TransactorModule {
 
   private def makeTransactor[F[_]: Async](config: DatabaseConfig): Resource[F, HikariTransactor[F]] =
     for {
-      connectionPool   <- ExecutionContexts.fixedThreadPool(config.maximumPoolSize)
-      hikariTransactor <- HikariTransactor.fromHikariConfigCustomEc[F](hikariConfig(config), connectionPool)
+      connectionPool <- ExecutionContexts.fixedThreadPool(config.maximumPoolSize)
+      hikariTransactor <-
+        HikariTransactor.fromHikariConfigCustomEc[F](hikariConfig(config), connectionPool, Some(jdkLogHandler))
     } yield hikariTransactor
 
   private def hikariConfig: DatabaseConfig => HikariConfig =
