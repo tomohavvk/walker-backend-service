@@ -29,7 +29,7 @@ class Application[F[_]: Async: Console, B[_]: Sync /*, C[_]: Async: MonadCancelT
   import environment.contextLoggerF
   import environment.contextLoggerB
 
-  def run()(implicit F: LiftConnectionIO[B, AppError], H: Handle[F, AppError]): F[ExitCode] =
+  def run()(implicit F: LiftConnectionIO[B, AppError], HF: Handle[F, AppError], HB: Handle[B, Throwable]): F[ExitCode] =
     ResourceModule.make[F](configs).use { implicit resources =>
       for {
         _ <- logger.info(s"Starting ${BuildInfo.name} ${BuildInfo.version}...")

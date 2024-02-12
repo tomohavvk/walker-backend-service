@@ -2,7 +2,9 @@ package org.tomohavvk.walker
 
 import cats.data.EitherT
 import cats.data.Kleisli
+import cats.effect.IO
 import cats.effect.kernel.Resource
+import doobie.free.connection.ConnectionIO
 import org.tomohavvk.walker.protocol.errors.AppError
 
 package object utils extends AppResultSyntax with AppErrorSyntax with AnySyntax with LiftFSyntax {

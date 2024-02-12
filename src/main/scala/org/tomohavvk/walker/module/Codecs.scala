@@ -1,5 +1,6 @@
 package org.tomohavvk.walker.module
 
+import org.tomohavvk.walker.http.endpoints.codecs.DeviceCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.ErrorCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.LocationCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.ProbeCodecs
@@ -13,6 +14,7 @@ import sttp.tapir.json.circe.TapirJsonCirce
 case class Codecs(
   probe:          ProbeCodecs,
   locationCodecs: LocationCodecs,
+  deviceCodecs:   DeviceCodecs,
   errorCodecs:    ErrorCodecs)
 
 object Codecs
@@ -26,8 +28,9 @@ object Codecs
 
   val probeCodecs: ProbeCodecs       = ProbeCodecs()
   val locationCodecs: LocationCodecs = LocationCodecs()
+  val deviceCodecs: DeviceCodecs     = DeviceCodecs()
   val errorCodecs: ErrorCodecs       = ErrorCodecs()
 
-  def make: Codecs = Codecs(probeCodecs, locationCodecs, errorCodecs)
+  def make: Codecs = Codecs(probeCodecs, locationCodecs, deviceCodecs, errorCodecs)
 
 }

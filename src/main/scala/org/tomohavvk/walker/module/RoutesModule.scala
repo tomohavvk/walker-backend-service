@@ -6,6 +6,7 @@ import ServiceModule.ServicesDeps
 import io.odin.Logger
 import org.tomohavvk.walker.http.endpoints.ErrorHandling
 import org.tomohavvk.walker.http.routes.RoutesDeps
+import org.tomohavvk.walker.http.routes.api.DeviceRoutes
 import org.tomohavvk.walker.http.routes.api.LocationRoutes
 import org.tomohavvk.walker.http.routes.api.ProbeRoutes
 import org.tomohavvk.walker.http.routes.openapi.OpenApiRoutes
@@ -26,8 +27,9 @@ object RoutesModule {
 
     RoutesDeps[F](
       new ProbeRoutes[F](endpoints.probe),
-      new LocationRoutes[F](endpoints.marketFeed, services.locationService),
-      new OpenApiRoutes[F](endpoints.probe, endpoints.marketFeed)
+      new LocationRoutes[F](endpoints.location, services.locationService),
+      new DeviceRoutes[F](endpoints.device, services.deviceService),
+      new OpenApiRoutes[F](endpoints.probe, endpoints.location, endpoints.device)
     )
   }
 

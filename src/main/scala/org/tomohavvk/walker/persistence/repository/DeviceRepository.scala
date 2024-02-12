@@ -27,7 +27,7 @@ trait DeviceQueries extends DoobieMeta {
 
   def upsertQuery(entity: DeviceEntity): doobie.Update0 = {
     import entity._
-    fr"""INSERT INTO devices (id, name, created_at) VALUES ($id, $name, $createdAt) ON CONFLICT(id) DO NOTHING""".update
+    fr"""INSERT INTO devices (id, name, created_at) VALUES ($id, $name, $createdAt)""".update
   }
 
   def findByIdQuery(deviceId: DeviceId): doobie.Query0[DeviceEntity] =

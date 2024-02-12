@@ -19,7 +19,6 @@ package object persistence {
       ViolatesForeignKeyError(ex.getLocalizedMessage, Some(ex))
 
     case ex =>
-      println(ex)
       new DatabaseError(ex.getLocalizedMessage, Some(ex))
 
   }

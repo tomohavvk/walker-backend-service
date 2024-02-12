@@ -3,6 +3,7 @@ package org.tomohavvk.walker.http.routes.openapi
 import cats.effect.kernel.Async
 import org.http4s.HttpRoutes
 import org.tomohavvk.walker.BuildInfo
+import org.tomohavvk.walker.http.endpoints.DeviceEndpoints
 import org.tomohavvk.walker.http.endpoints.LocationEndpoints
 import org.tomohavvk.walker.http.endpoints.ProbeEndpoints
 import sttp.apispec.openapi.Info
@@ -13,12 +14,15 @@ import sttp.tapir.swagger.SwaggerUI
 
 class OpenApiRoutes[F[_]: Async](
   probeEndpoints:    ProbeEndpoints,
-  locationEndpoints: LocationEndpoints) {
+  locationEndpoints: LocationEndpoints,
+  deviceEndpoints:   DeviceEndpoints) {
 
   val endpoints = List(
     probeEndpoints.livenessEndpoint,
     probeEndpoints.readinessEndpoint,
-    locationEndpoints.getLatestDeviceLocationEndpoint
+    locationEndpoints.getLatestDeviceLocationEndpoint,
+    deviceEndpoints.getDeviceEndpoint,
+    deviceEndpoints.createDeviceEndpoint
   )
 
   val openApiInfo: Info = Info(

@@ -15,8 +15,11 @@ trait ErrorMappings extends MappingHelper with ErrorBodies {
   protected val badRequestStatusMapping: OneOfVariant[EndpointError] =
     statusMapping(StatusCode.BadRequest, statusCode and badRequestBody)
 
-  protected val notFoundErrorErrorStatusMapping: OneOfVariant[EndpointError] =
+  protected val notFoundErrorStatusMapping: OneOfVariant[EndpointError] =
     statusMapping(StatusCode.NotFound, statusCode and internalErrorBody)
+
+  protected val alreadyExistsErrorStatusMapping: OneOfVariant[EndpointError] =
+    statusMapping(StatusCode.Conflict, statusCode and alreadyExistsBody)
 
   protected val internalErrorStatusMapping: OneOfVariant[EndpointError] =
     statusMapping(StatusCode.InternalServerError, statusCode and internalErrorBody)
