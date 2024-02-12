@@ -19,8 +19,6 @@
   </appender>
 
   <logger name="org.tomohavvk" level="INFO"/>
-  <logger name="play" level="INFO" />
-  <logger name="application" level="INFO" />
   <logger name="org.apache.kafka" level="OFF" />
 
   <root level="DEBUG">

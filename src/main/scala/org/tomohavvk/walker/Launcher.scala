@@ -30,7 +30,7 @@ object Launcher extends IOApp {
       .flatMap {
         case Right(env) =>
           EitherT.liftF[IO, AppError, ExitCode](TransactorModule.make[AppEffect, DbEffect, IO](env.configs).use {
-            dbDeps => runApp(env, dbDeps.transactor).value.flatMap(handleResult)
+            txDeps => runApp(env, txDeps.transactor).value.flatMap(handleResult)
           })
 
         case Left(exception) => failApp(exception)
@@ -38,16 +38,16 @@ object Launcher extends IOApp {
       .value
       .flatMap(handleResult)
 
-  private def handleResult: Either[AppError, ExitCode] => IO[ExitCode] = {
-    case Right(exitCode) => IO(exitCode)
-    case Left(error)     => logger.error(error.logMessage.value) >> IO(ExitCode.Error)
-  }
-
   private def runApp(
     implicit environment: Environment[AppEffect],
     transactor:           Transactor[AppEffect, DbEffect]
   ): AppEffect[ExitCode] =
     new Application[AppEffect, DbEffect].run()
+
+  private def handleResult: Either[AppError, ExitCode] => IO[ExitCode] = {
+    case Right(exitCode) => IO(exitCode)
+    case Left(error)     => logger.error(error.logMessage.value) >> IO(ExitCode.Error)
+  }
 
   private def failApp(exception: Exception): AppEffect[ExitCode] =
     EitherT.liftF(

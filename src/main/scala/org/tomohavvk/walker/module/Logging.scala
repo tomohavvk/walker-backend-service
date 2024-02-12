@@ -13,7 +13,7 @@ object Logging {
   private val formatter: Formatter =
     Formatter.create(ThrowableFormat.Default, PositionFormat.AbbreviatePackage, colorful = true, printCtx = true)
 
-  def makeLogger[F[_]: Sync]: Logger[F] = consoleLogger[F]().withMinimalLevel(Level.Info)
+  def makeLogger[F[_]: Sync]: Logger[F] = consoleLogger[F]().withMinimalLevel(Level.Debug)
 
   def makeContext[F[_]: Sync]: Logger[ContextFlow[F, *]] =
     consoleLogger[ContextFlow[F, *]](formatter = formatter).withContext
