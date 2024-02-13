@@ -1,6 +1,10 @@
 target
+.metals
+.vscode
+.bloop
 .idea
 version
 *.iml
 .bsp
 .DS_Store
+metals.sbt

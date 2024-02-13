@@ -1,6 +1,5 @@
 package org.tomohavvk.walker.services
 
-import cats.Applicative
 import cats.effect.kernel.Clock
 import cats.effect.kernel.Sync
 import cats.implicits.catsSyntaxFlatMapOps
@@ -42,7 +41,7 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
       transactor
         .withTxn(deviceLocationRepo.findLastById(deviceId))
         .flatMap {
-          case Some(value) => Applicative[F].pure(value.asView)
+          case Some(value) => HF.applicative.pure(value.asView)
           case None        => HF.raise(NotFoundError(s"Device: ${deviceId.value} not exists in the system"))
         }
 

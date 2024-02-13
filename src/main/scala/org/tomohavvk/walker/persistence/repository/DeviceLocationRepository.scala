@@ -23,7 +23,7 @@ class DoobieDeviceLocationRepository[D[_]](implicit D: LiftConnectionIO[D, AppEr
     D.lift(upsertQuery(entities))
 
   override def findLastById(deviceId: DeviceId): D[Option[DeviceLocationEntity]] =
-    D.lift(findLastByIdSQuery(deviceId).option)
+    D.lift(findLastByIdQuery(deviceId).option)
 }
 
 trait DeviceLocationQueries extends DoobieMeta {
@@ -37,7 +37,7 @@ trait DeviceLocationQueries extends DoobieMeta {
     Update[DeviceLocationEntity](sqlStatement).updateMany(entities)
   }
 
-  def findLastByIdSQuery(deviceId: DeviceId): doobie.Query0[DeviceLocationEntity] =
+  def findLastByIdQuery(deviceId: DeviceId): doobie.Query0[DeviceLocationEntity] =
     fr"""SELECT device_id, latitude, longitude, accuracy, altitude, speed, bearing, altitude_accuracy, time
          FROM devices_locations WHERE device_id = $deviceId ORDER BY time DESC LIMIT 1"""
       .query[DeviceLocationEntity]

@@ -7,7 +7,6 @@ import cats.effect.std.Console
 import cats.implicits._
 import cats.mtl.Handle
 import cats.~>
-import org.tomohavvk.walker.module.EndpointModule
 import org.tomohavvk.walker.module.Environment
 import org.tomohavvk.walker.module.HttpModule
 import org.tomohavvk.walker.module.RepositoryModule
@@ -30,7 +29,6 @@ class Application[F[_]: Async, D[_]: Sync, H[_]: Async: Console](
   LiftHF:               H ~> F) {
 
   import environment.configs
-  import environment.codecs
   import environment.loggerF
   import environment.loggerD
   private implicit val loggerH = environment.loggerH
@@ -41,8 +39,7 @@ class Application[F[_]: Async, D[_]: Sync, H[_]: Async: Console](
         _ <- loggerF.info(s"Starting ${BuildInfo.name} ${BuildInfo.version}...")
         repositories = RepositoryModule.make[D]()
         services     = ServiceModule.make(repositories, transactor, loggerF, loggerD)
-        endpoints    = EndpointModule.make(codecs)
-        server       = HttpModule.make[F, H](endpoints, services, environment.codecs, configs.server)
+        server       = HttpModule.make[F, H](services, environment.codecs, configs.server)
         stream       = StreamModule.make(services, resources, transactor, loggerF)
         _ <- PersistenceMigration.migrate(configs.database, loggerF)
         lifecycle = new Lifecycle[F, D, H](configs, loggerH, server, stream.deviceLocationEventStream)

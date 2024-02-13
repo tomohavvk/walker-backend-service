@@ -24,7 +24,10 @@ trait EndpointSchemas {
     )
 
   implicit val tapirDeviceIdSchema: Schema[DeviceId]                 = DeviceId.deriving
+  implicit val tapirGroupIdSchema: Schema[GroupId]                   = GroupId.deriving
   implicit val tapirDeviceName: Schema[DeviceName]                   = DeviceName.deriving
+  implicit val tapirDeviceCount: Schema[DeviceCount]                 = DeviceCount.deriving
+  implicit val tapirGroupName: Schema[GroupName]                     = GroupName.deriving
   implicit val tapirLatitudeSchema: Schema[Latitude]                 = Latitude.deriving
   implicit val tapirLongitudeSchema: Schema[Longitude]               = Longitude.deriving
   implicit val tapirUnixTimeSchema: Schema[UnixTime]                 = UnixTime.deriving

@@ -7,5 +7,6 @@ import java.time.LocalDateTime
 case class GroupEntity(
   id:            GroupId,
   name:          GroupName,
+  deviceCount:   DeviceCount,
   ownerDeviceId: DeviceId,
   createdAt:     LocalDateTime)

@@ -13,9 +13,12 @@ class DatabaseError(internalMessage: String, override val exception: Option[Thro
       logMessage = LogErrorMessage(internalMessage)
     )
 
-case class AlreadyExistError(internalMessage: String, override val exception: Option[Throwable])
+case class UniqueConstraintError(
+  message:                String,
+  internalMessage:        String = "Unique constraint error",
+  override val exception: Option[Throwable] = None)
     extends DatabaseError(internalMessage, exception) {
-  override val apiMessage: ApiErrorMessage = ApiErrorMessage("Entity already exists")
+  override val apiMessage: ApiErrorMessage = ApiErrorMessage(message)
   override val code: ErrorCode             = ErrorCode("conflict_error")
   override val httpCode: HttpCode          = HttpCode(409)
 }

@@ -2,6 +2,7 @@ package org.tomohavvk.walker.module
 
 import org.tomohavvk.walker.http.endpoints.codecs.DeviceCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.ErrorCodecs
+import org.tomohavvk.walker.http.endpoints.codecs.GroupCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.LocationCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.ProbeCodecs
 import org.tomohavvk.walker.http.endpoints.schemas.EndpointSchemas
@@ -15,6 +16,7 @@ case class Codecs(
   probe:          ProbeCodecs,
   locationCodecs: LocationCodecs,
   deviceCodecs:   DeviceCodecs,
+  groupCodecs:    GroupCodecs,
   errorCodecs:    ErrorCodecs)
 
 object Codecs
@@ -29,8 +31,9 @@ object Codecs
   val probeCodecs: ProbeCodecs       = ProbeCodecs()
   val locationCodecs: LocationCodecs = LocationCodecs()
   val deviceCodecs: DeviceCodecs     = DeviceCodecs()
+  val groupCodecs: GroupCodecs       = GroupCodecs()
   val errorCodecs: ErrorCodecs       = ErrorCodecs()
 
-  def make: Codecs = Codecs(probeCodecs, locationCodecs, deviceCodecs, errorCodecs)
+  def make: Codecs = Codecs(probeCodecs, locationCodecs, deviceCodecs, groupCodecs, errorCodecs)
 
 }

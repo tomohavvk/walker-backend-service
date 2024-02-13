@@ -41,7 +41,6 @@ package object routes {
           .flatMap[Either[(StatusCode, AppError), O]] {
             case v @ Right(_) => Applicative[H].pure(v)
             case e @ Left((_, error)) =>
-              println(error.httpCode.value)
               loggerH.error(error.logMessage.value).as(e)
           }
       })

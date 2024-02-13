@@ -27,9 +27,10 @@ trait GroupQueries extends DoobieMeta {
 
   def upsertQuery(entity: GroupEntity): doobie.Update0 = {
     import entity._
-    fr"""INSERT INTO groups (id, name, owner_device_id, created_at) VALUES ($id, $name, $ownerDeviceId, $createdAt)""".update
+    fr"""INSERT INTO groups (id, name, device_count, owner_device_id, created_at) VALUES ($id, $name, $deviceCount, $ownerDeviceId, $createdAt)""".update
   }
 
   def findByIdQuery(groupId: GroupId): doobie.Query0[GroupEntity] =
-    fr"""SELECT id, name, owner_device_id, created_at FROM groups WHERE id = $groupId""".query[GroupEntity]
+    fr"""SELECT id, name, device_count, owner_device_id, created_at FROM groups WHERE id = $groupId"""
+      .query[GroupEntity]
 }

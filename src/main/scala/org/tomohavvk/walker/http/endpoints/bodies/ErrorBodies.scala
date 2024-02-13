@@ -1,6 +1,6 @@
 package org.tomohavvk.walker.http.endpoints.bodies
 
-import org.tomohavvk.walker.protocol.errors.AlreadyExistError
+import org.tomohavvk.walker.protocol.errors.UniqueConstraintError
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.BadRequestError
 import org.tomohavvk.walker.protocol.errors.InternalError
@@ -35,12 +35,12 @@ trait ErrorExamples {
 
   protected val internalErrorExample: AppError = InternalError("Something went wrong")
 
-  protected val notFoundErrorExample: AppError = NotFoundError("Internal error", "The requested entity can't be found")
+  protected val notFoundErrorExample: AppError = NotFoundError("The requested entity can't be found")
 
   protected val badRequestErrorExample: AppError =
     BadRequestError("Internal error", "The request contains bad syntax or cannot be fulfilled.")
 
   protected val alreadyExistsErrorExample: AppError =
-    AlreadyExistError("Entity already exists", None)
+    UniqueConstraintError("Entity already exists")
 
 }

@@ -11,6 +11,7 @@ object Types {
   @newtype case class GroupId(value: String)
   @newtype case class GroupName(value: String)
   @newtype case class DeviceName(value: String)
+  @newtype case class DeviceCount(value: Int)
   @newtype case class Latitude(value: Double)
   @newtype case class Longitude(value: Double)
   @newtype case class Accuracy(value: Double)

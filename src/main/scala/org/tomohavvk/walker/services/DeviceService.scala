@@ -1,6 +1,5 @@
 package org.tomohavvk.walker.services
 
-import cats.Applicative
 import cats.effect.kernel.Clock
 import cats.effect.kernel.Sync
 import cats.implicits.catsSyntaxFlatMapOps
@@ -34,23 +33,24 @@ class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
     extends DeviceService[F] {
 
   override def findDevice(deviceId: DeviceId): F[DeviceView] =
-    loggerF.debug("Last location request") >>
+    loggerF.debug("Find device request") >>
       transactor
         .withTxn(deviceRepo.findById(deviceId))
         .flatMap {
-          case Some(value) => Applicative[F].pure(value.transformInto[DeviceView])
+          case Some(value) => HF.applicative.pure(value.transformInto[DeviceView])
           case None        => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
         }
 
   override def createDevice(deviceId: DeviceId, command: CreateDeviceCommand): F[DeviceView] =
-    transactor.withTxn {
-      TimeGen[D].genTimeUtc.flatMap { createdAt =>
-        val entity = DeviceEntity(deviceId, command.name, createdAt)
+    loggerF.debug("Create device request") >>
+      transactor.withTxn {
+        TimeGen[D].genTimeUtc.flatMap { createdAt =>
+          val entity = DeviceEntity(deviceId, command.name, createdAt)
 
-        deviceRepo
-          .upsert(DeviceEntity(deviceId, command.name, createdAt))
-          .as(entity.transformInto[DeviceView])
-          .handleWith[AppError](error => HD.raise(error))
+          deviceRepo
+            .upsert(entity)
+            .as(entity.transformInto[DeviceView])
+            .handleWith[AppError](error => HD.raise(error))
+        }
       }
-    }
 }

@@ -8,6 +8,7 @@ import io.odin.Logger
 import org.http4s.HttpRoutes
 import org.tomohavvk.walker.config.ServerConfig
 import org.tomohavvk.walker.http.endpoints.ErrorHandling
+import org.tomohavvk.walker.http.endpoints.WalkerEndpoints
 import org.tomohavvk.walker.http.routes.api.WalkerApi
 import org.tomohavvk.walker.http.routes.openapi.OpenApiRoutes
 import org.tomohavvk.walker.http.server.HttpServer
@@ -21,7 +22,6 @@ import sttp.tapir.server.interceptor.exception.DefaultExceptionHandler
 object HttpModule {
 
   def make[F[_]: Applicative, H[_]: Async](
-    endpoints:  Endpoints,
     services:   ServicesDeps[F],
     codecs:     Codecs,
     config:     ServerConfig
@@ -29,18 +29,13 @@ object HttpModule {
     loggerH:    Logger[H]
   ): HttpServer[H] = {
     implicit val option: Http4sServerOptions[H] = makeOptions[H](codecs)
+    val walkerEndpoints                         = new WalkerEndpoints(codecs.errorCodecs, codecs)
+    val walkerApi =
+      new WalkerApi[F, H](walkerEndpoints, services.deviceService, services.groupService, services.locationService)
 
-    val walkerApi = new WalkerApi[F, H](endpoints.device,
-                                        endpoints.location,
-                                        endpoints.probe,
-                                        services.deviceService,
-                                        services.locationService
-    )
+    val openApi = new OpenApiRoutes[H](walkerEndpoints)
 
-    val openApi = new OpenApiRoutes[H](endpoints.probe, endpoints.location, endpoints.device)
-
-    val apiRoutes: HttpRoutes[H] =
-      openApi.routes <+> walkerApi.routes
+    val apiRoutes: HttpRoutes[H] = openApi.routes <+> walkerApi.routes
 
     new HttpServer(config, apiRoutes)
   }

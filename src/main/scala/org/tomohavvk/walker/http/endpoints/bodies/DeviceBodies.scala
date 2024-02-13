@@ -1,6 +1,5 @@
 package org.tomohavvk.walker.http.endpoints.bodies
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.DeviceName
 import org.tomohavvk.walker.protocol.commands.CreateDeviceCommand
@@ -28,13 +27,13 @@ trait DeviceExamples {
 
   protected val exampleDeviceView: DeviceView =
     DeviceView(
-      id = DeviceId(NanoIdUtils.randomNanoId()),
-      name = DeviceName("Walker"),
+      id = DeviceId("C471D192-6B42-47C6-89EF-2BCD49DB603D"),
+      name = DeviceName("Walker Device"),
       createdAt = LocalDateTime.now()
     )
 
   protected val exampleCreateDeviceCommand: CreateDeviceCommand =
     CreateDeviceCommand(
-      name = DeviceName("Walker")
+      name = DeviceName("Walker Device")
     )
 }
