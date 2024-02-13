@@ -6,42 +6,47 @@ import cats.effect.kernel.Sync
 import cats.effect.std.Console
 import cats.implicits._
 import cats.mtl.Handle
+import cats.~>
 import org.tomohavvk.walker.module.EndpointModule
 import org.tomohavvk.walker.module.Environment
 import org.tomohavvk.walker.module.HttpModule
 import org.tomohavvk.walker.module.RepositoryModule
 import org.tomohavvk.walker.module.ResourceModule
-import org.tomohavvk.walker.module.RoutesModule
 import org.tomohavvk.walker.module.ServiceModule
 import org.tomohavvk.walker.module.StreamModule
 import org.tomohavvk.walker.persistence.PersistenceMigration
 import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.utils.LiftConnectionIO
+import org.tomohavvk.walker.utils.UnliftF
 
-class Application[F[_]: Async: Console, B[_]: Sync /*, C[_]: Async: MonadCancelThrow*/ ](
-  implicit environment: Environment[F, B],
-  transactor:           Transactor[F, B]
-  /*LiftMF:               C ~> F*/) {
+class Application[F[_]: Async, D[_]: Sync, H[_]: Async: Console](
+  implicit environment: Environment[F, D, H],
+  transactor:           Transactor[F, D],
+  D:                    LiftConnectionIO[D, AppError],
+  HF:                   Handle[F, AppError],
+  HD:                   Handle[D, AppError],
+  U:                    UnliftF[F, H, AppError],
+  LiftHF:               H ~> F) {
 
   import environment.configs
-  import environment.logger
-  import environment.contextLoggerF
-  import environment.contextLoggerB
+  import environment.codecs
+  import environment.loggerF
+  import environment.loggerD
+  private implicit val loggerH = environment.loggerH
 
-  def run()(implicit F: LiftConnectionIO[B, AppError], HF: Handle[F, AppError], HB: Handle[B, Throwable]): F[ExitCode] =
+  def run(): F[ExitCode] =
     ResourceModule.make[F](configs).use { implicit resources =>
       for {
-        _ <- logger.info(s"Starting ${BuildInfo.name} ${BuildInfo.version}...")
-        repositories = RepositoryModule.make[B]()
-        services     = ServiceModule.make(repositories, transactor, contextLoggerF, contextLoggerB)
-        endpoints    = EndpointModule.make[F, B]
-        routes       = RoutesModule.make[F, B](endpoints, services)
-        server       = HttpModule.make[F, B](routes)
-        stream       = StreamModule.make(services, resources, transactor, logger)
-        _ <- PersistenceMigration.migrate(configs.database, logger)
-        lifecycle = new Lifecycle[F, B](configs, logger, server, stream.deviceLocationEventStream)
-        exitCode <- lifecycle.start
+        _ <- loggerF.info(s"Starting ${BuildInfo.name} ${BuildInfo.version}...")
+        repositories = RepositoryModule.make[D]()
+        services     = ServiceModule.make(repositories, transactor, loggerF, loggerD)
+        endpoints    = EndpointModule.make(codecs)
+        server       = HttpModule.make[F, H](endpoints, services, environment.codecs, configs.server)
+        stream       = StreamModule.make(services, resources, transactor, loggerF)
+        _ <- PersistenceMigration.migrate(configs.database, loggerF)
+        lifecycle = new Lifecycle[F, D, H](configs, loggerH, server, stream.deviceLocationEventStream)
+        exitCode <- LiftHF(lifecycle.start)
       } yield exitCode
     }
 

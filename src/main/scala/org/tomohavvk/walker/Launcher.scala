@@ -1,32 +1,25 @@
 package org.tomohavvk.walker
 
 import cats.data.EitherT
-import cats.effect.std.Console
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
-import cats.effect.LiftIO
-import cats.~>
-import doobie.free.connection.ConnectionIO
+import cats.effect.std.Console
+import doobie.implicits._
 import io.odin.Level
 import io.odin.consoleLogger
-import org.tomohavvk.walker.module.TransactorModule
 import org.tomohavvk.walker.module.Environment
+import org.tomohavvk.walker.module.TransactorModule
 import org.tomohavvk.walker.persistence.Transactor
-import org.tomohavvk.walker.utils.LiftConnectionIO.liftConnectionIOForEitherT
 import org.tomohavvk.walker.protocol.errors.AppError
+import org.tomohavvk.walker.utils.LiftConnectionIO.liftConnectionIOForEitherT
 
 object Launcher extends IOApp {
   private val logger = consoleLogger[IO]().withMinimalLevel(Level.Info)
 
-  type AppEffect[A] = EitherT[IO, AppError, A]
-  type DbEffect[A]  = EitherT[ConnectionIO, AppError, A]
-
-  implicit val LiftMF: IO ~> AppEffect = LiftIO.liftK[AppEffect]
-
   override def run(args: List[String]): IO[ExitCode] =
     Environment
-      .make[AppEffect, DbEffect]
+      .make[AppEffect, DbEffect, IO]
       .flatMap {
         case Right(env) =>
           EitherT.liftF[IO, AppError, ExitCode](TransactorModule.make[AppEffect, DbEffect, IO](env.configs).use {
@@ -39,10 +32,10 @@ object Launcher extends IOApp {
       .flatMap(handleResult)
 
   private def runApp(
-    implicit environment: Environment[AppEffect, DbEffect],
+    implicit environment: Environment[AppEffect, DbEffect, IO],
     transactor:           Transactor[AppEffect, DbEffect]
   ): AppEffect[ExitCode] =
-    new Application[AppEffect, DbEffect].run()
+    new Application[AppEffect, DbEffect, IO].run()
 
   private def handleResult: Either[AppError, ExitCode] => IO[ExitCode] = {
     case Right(exitCode) => IO(exitCode)

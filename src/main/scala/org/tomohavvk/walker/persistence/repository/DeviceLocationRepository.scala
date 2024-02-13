@@ -10,20 +10,20 @@ import org.tomohavvk.walker.persistence._
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.utils.LiftConnectionIO
 
-trait DeviceLocationRepository[F[_]] {
-  def findLastById(deviceId: DeviceId): F[Option[DeviceLocationEntity]]
-  def upsertBatch(entities:  List[DeviceLocationEntity]): F[Int]
+trait DeviceLocationRepository[D[_]] {
+  def findLastById(deviceId: DeviceId): D[Option[DeviceLocationEntity]]
+  def upsertBatch(entities:  List[DeviceLocationEntity]): D[Int]
 }
 
-class DoobieDeviceLocationRepository[F[_]](implicit F: LiftConnectionIO[F, AppError])
-    extends DeviceLocationRepository[F]
+class DoobieDeviceLocationRepository[D[_]](implicit D: LiftConnectionIO[D, AppError])
+    extends DeviceLocationRepository[D]
     with DeviceLocationQueries {
 
-  override def upsertBatch(entities: List[DeviceLocationEntity]): F[Int] =
-    F.lift(upsertQuery(entities))
+  override def upsertBatch(entities: List[DeviceLocationEntity]): D[Int] =
+    D.lift(upsertQuery(entities))
 
-  override def findLastById(deviceId: DeviceId): F[Option[DeviceLocationEntity]] =
-    F.lift(findLastByIdSQuery(deviceId).option)
+  override def findLastById(deviceId: DeviceId): D[Option[DeviceLocationEntity]] =
+    D.lift(findLastByIdSQuery(deviceId).option)
 }
 
 trait DeviceLocationQueries extends DoobieMeta {

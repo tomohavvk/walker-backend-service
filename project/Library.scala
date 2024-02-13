@@ -96,17 +96,21 @@ object Library {
   }
 
   object Tests {
-    val catsScalaTest   = orgs.typeLevel  %% "cats-effect-testing-scalatest" % "1.4.0"
-    val munitCatsEffect = orgs.typeLevel  %% "munit-cats-effect-3"           % "1.0.7"
-    val scalaMock       = "org.scalamock" %% "scalamock-scalatest-support"   % "3.6.0"
-    val scalaTest       = "org.scalatest" %% "scalatest"                     % "3.2.15"
+    val catsScalaTest       = orgs.typeLevel               %% "cats-effect-testing-scalatest" % "1.4.0"
+    val munitCatsEffect     = orgs.typeLevel               %% "munit-cats-effect-3"           % "1.0.7"
+    val scalaMock           = "org.scalamock"              %% "scalamock-scalatest-support"   % "3.6.0"
+    val scalaTest           = "org.scalatest"              %% "scalatest"                     % "3.2.15"
+    val scalaCheckShapeless = "com.github.alexarchambault" %% "scalacheck-shapeless_1.15"     % "1.3.0"
+    val scalatestplus       = "org.scalatestplus"          %% "scalacheck-1-15"               % "3.2.11.0"
   }
 
   val testLibs = Seq(
-    Tests.scalaMock       % "test",
-    Tests.scalaTest       % "test",
-    Tests.munitCatsEffect % "test",
-    Tests.catsScalaTest   % "test"
+    Tests.scalaMock           % "test",
+    Tests.scalaTest           % "test",
+    Tests.scalatestplus       % "test",
+    Tests.munitCatsEffect     % "test",
+    Tests.catsScalaTest       % "test",
+    Tests.scalaCheckShapeless % "test"
   )
 
   val appLibs = Seq(

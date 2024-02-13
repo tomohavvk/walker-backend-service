@@ -1,13 +1,14 @@
 package org.tomohavvk.walker.services
 
-import cats.data.EitherT
-import cats.data.Kleisli
+import cats.Applicative
 import cats.effect.kernel.Clock
 import cats.effect.kernel.Sync
+import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
 import cats.implicits.toFunctorOps
 import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
+import io.odin.Logger
 import io.scalaland.chimney.dsl._
 import org.tomohavvk.walker.generation.TimeGen
 import org.tomohavvk.walker.persistence.Transactor
@@ -18,45 +19,38 @@ import org.tomohavvk.walker.protocol.entities.DeviceEntity
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.NotFoundError
 import org.tomohavvk.walker.protocol.views.DeviceView
-import org.tomohavvk.walker.utils.ContextFlow
-import org.tomohavvk.walker.utils.liftFSyntax
 
 trait DeviceService[F[_]] {
-  def findDevice(deviceId:   DeviceId): ContextFlow[F, DeviceView]
-  def createDevice(deviceId: DeviceId, command: CreateDeviceCommand): ContextFlow[F, DeviceView]
+  def findDevice(deviceId:   DeviceId): F[DeviceView]
+  def createDevice(deviceId: DeviceId, command: CreateDeviceCommand): F[DeviceView]
 }
 
-class DeviceServiceImpl[F[_]: Sync: Clock, B[_]: Sync](
-  deviceRepo: DeviceRepository[B],
-  transactor: Transactor[F, B]
-)(implicit H: Handle[B, Throwable])
+class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
+  deviceRepo:  DeviceRepository[D],
+  transactor:  Transactor[F, D],
+  loggerF:     Logger[F]
+)(implicit HF: Handle[F, AppError],
+  HD:          Handle[D, AppError])
     extends DeviceService[F] {
 
-  override def findDevice(deviceId: DeviceId): ContextFlow[F, DeviceView] =
-    transactor
-      .withTxn {
-        deviceRepo.findById(deviceId)
-      }
-      .liftFlow
-      .flatMap {
-        case Some(value) => Kleisli.liftF(EitherT.pure[F, AppError](value.transformInto[DeviceView]))
-        case None        => Kleisli.liftF(EitherT.leftT[F, DeviceView](NotFoundError(s"Device: ${deviceId.value} not found")))
-      }
+  override def findDevice(deviceId: DeviceId): F[DeviceView] =
+    loggerF.debug("Last location request") >>
+      transactor
+        .withTxn(deviceRepo.findById(deviceId))
+        .flatMap {
+          case Some(value) => Applicative[F].pure(value.transformInto[DeviceView])
+          case None        => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
+        }
 
-  // FIXME fix error handling
-  override def createDevice(deviceId: DeviceId, command: CreateDeviceCommand): ContextFlow[F, DeviceView] =
+  override def createDevice(deviceId: DeviceId, command: CreateDeviceCommand): F[DeviceView] =
     transactor.withTxn {
-      TimeGen[B].genTimeUtc.flatMap { createdAt =>
+      TimeGen[D].genTimeUtc.flatMap { createdAt =>
         val entity = DeviceEntity(deviceId, command.name, createdAt)
 
         deviceRepo
           .upsert(DeviceEntity(deviceId, command.name, createdAt))
           .as(entity.transformInto[DeviceView])
-          .handleWith[Throwable] { error =>
-            println(2222)
-            H.raise(error)
-          }
+          .handleWith[AppError](error => HD.raise(error))
       }
-    }.liftFlow
-
+    }
 }

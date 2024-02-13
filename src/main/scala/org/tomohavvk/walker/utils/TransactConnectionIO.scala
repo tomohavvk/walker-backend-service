@@ -7,9 +7,7 @@ import doobie._
 import doobie.implicits._
 
 trait TransactConnectionIO[F[_], G[_], M[_]] {
-
-  def transact[A](ga: G[A], xa: Transactor[M])(implicit bracket: MonadCancelThrow[M]): F[A]
-
+  def transact[A](ga: G[A], xa: Transactor[M])(implicit M: MonadCancelThrow[M]): F[A]
 }
 
 object TransactConnectionIO {
@@ -21,12 +19,10 @@ object TransactConnectionIO {
     new TransactConnectionIO[EitherT[M, E, *], EitherT[ConnectionIO, E, *], M] {
 
       override def transact[A](
-        ga:               EitherT[ConnectionIO, E, A],
-        xa:               Transactor[M]
-      )(implicit bracket: MonadCancelThrow[M]
+        ga:         EitherT[ConnectionIO, E, A],
+        xa:         Transactor[M]
+      )(implicit M: MonadCancelThrow[M]
       ): EitherT[M, E, A] =
         EitherT.apply[M, E, A](ga.value.transact(xa))
-
     }
-
 }

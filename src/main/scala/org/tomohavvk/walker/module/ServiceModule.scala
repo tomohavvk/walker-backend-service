@@ -10,27 +10,26 @@ import org.tomohavvk.walker.services.DeviceService
 import org.tomohavvk.walker.services.DeviceServiceImpl
 import org.tomohavvk.walker.services.LocationService
 import org.tomohavvk.walker.services.LocationServiceImpl
-import org.tomohavvk.walker.utils.ContextFlow
 
 object ServiceModule {
 
   case class ServicesDeps[F[_]](locationService: LocationService[F], deviceService: DeviceService[F])
 
-  def make[F[_]: Sync, B[_]: Sync](
-    repositoriesDeps: RepositoriesDeps[B],
-    transactor:       Transactor[F, B],
-    loggerF:          Logger[ContextFlow[F, *]],
-    loggerB:          Logger[ContextFlow[B, *]]
+  def make[F[_]: Sync, D[_]: Sync](
+    repositoriesDeps: RepositoriesDeps[D],
+    transactor:       Transactor[F, D],
+    loggerF:          Logger[F],
+    loggerD:          Logger[D]
   )(implicit HF:      Handle[F, AppError],
-    HB:               Handle[B, Throwable]
+    HD:               Handle[D, AppError]
   ): ServicesDeps[F] = {
-    val locationService = new LocationServiceImpl[F, B](repositoriesDeps.deviceRepository,
+    val locationService = new LocationServiceImpl[F, D](repositoriesDeps.deviceRepository,
                                                         repositoriesDeps.deviceLocationRepository,
                                                         transactor,
                                                         loggerF,
-                                                        loggerB
+                                                        loggerD
     )
-    val deviceService = new DeviceServiceImpl[F, B](repositoriesDeps.deviceRepository, transactor)
+    val deviceService = new DeviceServiceImpl[F, D](repositoriesDeps.deviceRepository, transactor, loggerF)
 
     ServicesDeps(locationService, deviceService)
   }

@@ -8,12 +8,10 @@ case class Endpoints(probe: ProbeEndpoints, location: LocationEndpoints, device:
 
 object EndpointModule {
 
-  def make[F[_], B[_]](implicit environment: Environment[F, B]): Endpoints = {
-    import environment.codecs._
+  def make(codecs: Codecs): Endpoints =
     Endpoints(
-      new ProbeEndpoints()(probe, errorCodecs),
-      new LocationEndpoints()(locationCodecs, errorCodecs),
-      new DeviceEndpoints()(deviceCodecs, errorCodecs)
+      new ProbeEndpoints()(codecs.probe, codecs.errorCodecs),
+      new LocationEndpoints()(codecs.locationCodecs, codecs.errorCodecs),
+      new DeviceEndpoints()(codecs.deviceCodecs, codecs.errorCodecs)
     )
-  }
 }

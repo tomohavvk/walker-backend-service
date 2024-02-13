@@ -1,19 +1,15 @@
 package org.tomohavvk.walker.http
 
+import cats.Applicative
 import cats.effect.kernel.Async
-import cats.implicits.catsSyntaxApplicativeError
 import cats.implicits.toFlatMapOps
 import cats.implicits.toFunctorOps
-import cats.syntax.applicative._
 import cats.syntax.either._
 import io.odin.Logger
 import org.http4s.HttpRoutes
 import org.tomohavvk.walker.http.endpoints.EndpointError
 import org.tomohavvk.walker.protocol.errors.AppError
-import org.tomohavvk.walker.protocol.errors.InternalError
-import org.tomohavvk.walker.utils.ContextFlow
-import org.tomohavvk.walker.utils.LogContext
-import org.tomohavvk.walker.utils.anySyntax
+import org.tomohavvk.walker.utils.UnliftF
 import sttp.model.StatusCode
 import sttp.tapir.Endpoint
 import sttp.tapir.server.http4s.Http4sServerInterpreter
@@ -21,48 +17,34 @@ import sttp.tapir.server.http4s.Http4sServerOptions
 
 package object routes {
 
-  implicit class MappedHttp4sHttpEndpoint[F[_]: Async, I, O](
-    e:                      Endpoint[Unit, I, EndpointError, O, Any]
-  )(implicit serverOptions: Http4sServerOptions[F],
-    logger:                 Logger[ContextFlow[F, *]]) {
+  implicit class MappedHttp4sHttpEndpoint[I, O](
+    e: Endpoint[Unit, I, EndpointError, O, Any]) {
 
-    def toRoutes(logic: I => ContextFlow[F, O], logContext: I => LogContext): HttpRoutes[F] =
+    def toRoutes[F[_], H[_]: Async](
+      logic:                  I => F[O]
+    )(implicit serverOptions: Http4sServerOptions[H],
+      U:                      UnliftF[F, H, AppError],
+      loggerH:                Logger[H]
+    ): HttpRoutes[H] = {
+
+      def unlifted(i: I): H[Either[AppError, O]] =
+        U.unlift[O](logic(i))
+
       Http4sServerInterpreter(serverOptions).toRoutes(e.serverLogic { i =>
-        withErrorHandling(logic(i), logContext(i))
+        unlifted(i)
+          .map {
+            case Left(error) =>
+              (StatusCode.unsafeApply(error.httpCode.value) -> error).asLeft
+            case Right(ok) =>
+              ok.asRight
+          }
+          .flatMap[Either[(StatusCode, AppError), O]] {
+            case v @ Right(_) => Applicative[H].pure(v)
+            case e @ Left((_, error)) =>
+              println(error.httpCode.value)
+              loggerH.error(error.logMessage.value).as(e)
+          }
       })
-
-    def toRoutesNoInput(output: O): HttpRoutes[F] =
-      Http4sServerInterpreter(serverOptions).toRoutes(e.serverLogic { _ =>
-        withErrorHandling(output.rightT, LogContext.empty)
-      })
-
-    private def withErrorHandling(logic: ContextFlow[F, O], logContext: LogContext): F[Either[EndpointError, O]] =
-      Either
-        .catchNonFatal {
-          logic
-            .run(logContext)
-            .value
-            .flatMap {
-              case Right(result) => result.asRight[EndpointError].pure
-              case Left(error)   => logErrorAndMakeStatus(error, logContext)
-            }
-            .handleErrorWith(logErrorAndMakeStatus(_, logContext))
-        }
-        .valueOr(logErrorAndMakeStatus(_, logContext))
-
-    private def matchStatusCode(code: Int): StatusCode =
-      StatusCode
-        .safeApply(code)
-        .getOrElse(StatusCode.InternalServerError)
-
-    private def logErrorAndMakeStatus(appError: AppError, logContext: LogContext): F[Either[EndpointError, O]] =
-      logger
-        .error(s"Error occurred: ${appError.apiMessage}, details: ${appError.logMessage.value}")
-        .run(logContext)
-        .value
-        .as((matchStatusCode(appError.httpCode.value), appError).asLeft[O])
-
-    private def logErrorAndMakeStatus(error: Throwable, logContext: LogContext): F[Either[EndpointError, O]] =
-      logErrorAndMakeStatus(InternalError(error), logContext)
+    }
   }
 }

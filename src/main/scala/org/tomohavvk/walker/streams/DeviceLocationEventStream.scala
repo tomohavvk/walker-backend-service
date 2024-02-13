@@ -1,7 +1,6 @@
 package org.tomohavvk.walker.streams
 
 import cats.effect.kernel.Clock
-import cats.effect.kernel.Sync
 import cats.effect.kernel.Temporal
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFunctorOps
@@ -23,10 +22,10 @@ import fs2.kafka._
 
 import scala.concurrent.duration.DurationInt
 
-class DeviceLocationEventStream[F[_]: Temporal: Clock, B[_]](
+class DeviceLocationEventStream[F[_]: Temporal: Clock, D[_]](
   locationService: LocationService[F],
   eventConsumer:   EventConsumer[F, Key, Event],
-  logger:          Logger[F]) {
+  loggerF:         Logger[F]) {
   import eventConsumer._
 
   val stream: F[Unit] =
@@ -35,7 +34,7 @@ class DeviceLocationEventStream[F[_]: Temporal: Clock, B[_]](
         .evalMap { committable =>
           committable.record.value.event match {
             case event: DeviceLocationEvent =>
-              //  logger.info(event.locations.toString()) >>
+//              loggerF.info(event.locations.toString()) >>
               locationService
                 .upsertBatch(event.deviceId, makeEntities(event))
                 .as(committable.offset)

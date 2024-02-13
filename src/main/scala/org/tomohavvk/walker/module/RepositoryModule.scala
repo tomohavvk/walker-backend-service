@@ -9,10 +9,10 @@ import org.tomohavvk.walker.utils.LiftConnectionIO
 
 object RepositoryModule {
 
-  case class RepositoriesDeps[F[_]](
-    deviceRepository:         DeviceRepository[F],
-    deviceLocationRepository: DeviceLocationRepository[F])
+  case class RepositoriesDeps[D[_]](
+    deviceRepository:         DeviceRepository[D],
+    deviceLocationRepository: DeviceLocationRepository[D])
 
-  def make[F[_]]()(implicit F: LiftConnectionIO[F, AppError]): RepositoriesDeps[F] =
-    RepositoriesDeps(new DoobieDeviceRepository[F](), new DoobieDeviceLocationRepository[F]())
+  def make[D[_]]()(implicit D: LiftConnectionIO[D, AppError]): RepositoriesDeps[D] =
+    RepositoriesDeps(new DoobieDeviceRepository[D](), new DoobieDeviceLocationRepository[D]())
 }

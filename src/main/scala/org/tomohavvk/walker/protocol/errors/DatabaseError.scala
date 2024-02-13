@@ -14,7 +14,11 @@ class DatabaseError(internalMessage: String, override val exception: Option[Thro
     )
 
 case class AlreadyExistError(internalMessage: String, override val exception: Option[Throwable])
-    extends DatabaseError(internalMessage, exception)
+    extends DatabaseError(internalMessage, exception) {
+  override val apiMessage: ApiErrorMessage = ApiErrorMessage("Entity already exists")
+  override val code: ErrorCode             = ErrorCode("conflict_error")
+  override val httpCode: HttpCode          = HttpCode(409)
+}
 
 case class ViolatesForeignKeyError(internalMessage: String, override val exception: Option[Throwable])
     extends DatabaseError(internalMessage, exception)
