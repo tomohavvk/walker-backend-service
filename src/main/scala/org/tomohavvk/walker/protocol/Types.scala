@@ -2,6 +2,7 @@ package org.tomohavvk.walker.protocol
 
 import io.estatico.newtype.macros.newtype
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 object Types {
@@ -20,6 +21,9 @@ object Types {
   @newtype case class AltitudeAccuracy(value: Double)
   @newtype case class Speed(value: Double)
   @newtype case class UnixTime(value: Long)
+  @newtype case class IsPrivate(value: Boolean)
+  @newtype case class CreatedAt(value: LocalDateTime)
+  @newtype case class UpdatedAt(value: LocalDateTime)
 
   @newtype case class TraceId(value: String)
   @newtype case class ApiErrorMessage(value: String)

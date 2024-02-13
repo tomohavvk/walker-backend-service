@@ -12,6 +12,7 @@ import io.scalaland.chimney.dsl._
 import org.tomohavvk.walker.generation.TimeGen
 import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.persistence.repository.DeviceRepository
+import org.tomohavvk.walker.protocol.Types.CreatedAt
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.commands.CreateDeviceCommand
 import org.tomohavvk.walker.protocol.entities.DeviceEntity
@@ -45,7 +46,7 @@ class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
     loggerF.debug("Create device request") >>
       transactor.withTxn {
         TimeGen[D].genTimeUtc.flatMap { createdAt =>
-          val entity = DeviceEntity(deviceId, command.name, createdAt)
+          val entity = DeviceEntity(deviceId, command.name, CreatedAt(createdAt))
 
           deviceRepo
             .upsert(entity)

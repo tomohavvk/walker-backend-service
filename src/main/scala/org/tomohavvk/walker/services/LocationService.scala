@@ -12,6 +12,7 @@ import org.tomohavvk.walker.generation.TimeGen
 import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.persistence.repository.DeviceLocationRepository
 import org.tomohavvk.walker.persistence.repository.DeviceRepository
+import org.tomohavvk.walker.protocol.Types.CreatedAt
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.DeviceName
 import org.tomohavvk.walker.protocol.entities.DeviceEntity
@@ -60,7 +61,7 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
 
   private def createDevice(deviceId: DeviceId): D[Unit] =
     TimeGen[D].genTimeUtc.flatMap { createdAt =>
-      deviceRepo.upsert(DeviceEntity(deviceId, DeviceName("Walker"), createdAt)).void
+      deviceRepo.upsert(DeviceEntity(deviceId, DeviceName("Walker"), CreatedAt(createdAt))).void
     }
 
   private def debug(deviceId: DeviceId, message: String): F[Unit] =

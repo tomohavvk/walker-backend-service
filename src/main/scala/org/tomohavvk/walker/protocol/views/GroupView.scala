@@ -1,15 +1,12 @@
 package org.tomohavvk.walker.protocol.views
 
-import org.tomohavvk.walker.protocol.Types.DeviceCount
-import org.tomohavvk.walker.protocol.Types.DeviceId
-import org.tomohavvk.walker.protocol.Types.GroupId
-import org.tomohavvk.walker.protocol.Types.GroupName
-
-import java.time.LocalDateTime
+import org.tomohavvk.walker.protocol.Types._
 
 case class GroupView(
   id:            GroupId,
+  ownerDeviceId: DeviceId,
   name:          GroupName,
   deviceCount:   DeviceCount,
-  ownerDeviceId: DeviceId,
-  createdAt:     LocalDateTime)
+  isPrivate:     IsPrivate,
+  createdAt:     CreatedAt,
+  updatedAt:     UpdatedAt)

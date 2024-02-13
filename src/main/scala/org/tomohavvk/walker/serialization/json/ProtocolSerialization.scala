@@ -27,6 +27,7 @@ trait ProtocolSerialization extends CirceConfig {
 
   implicit val codecDeviceId: Codec[DeviceId]       = Codec.from(DeviceId.deriving, DeviceId.deriving)
   implicit val codecGroupId: Codec[GroupId]         = Codec.from(GroupId.deriving, GroupId.deriving)
+  implicit val codecIsPrivate: Codec[IsPrivate]     = Codec.from(IsPrivate.deriving, IsPrivate.deriving)
   implicit val codecDeviceName: Codec[DeviceName]   = Codec.from(DeviceName.deriving, DeviceName.deriving)
   implicit val codecDeviceCount: Codec[DeviceCount] = Codec.from(DeviceCount.deriving, DeviceCount.deriving)
   implicit val codecGroupName: Codec[GroupName]     = Codec.from(GroupName.deriving, GroupName.deriving)
@@ -37,6 +38,8 @@ trait ProtocolSerialization extends CirceConfig {
   implicit val codecSpeed: Codec[Speed]             = Codec.from(Speed.deriving, Speed.deriving)
   implicit val codecBearing: Codec[Bearing]         = Codec.from(Bearing.deriving, Bearing.deriving)
   implicit val codecUnixTime: Codec[UnixTime]       = Codec.from(UnixTime.deriving, UnixTime.deriving)
+  implicit val codecCreatedAt: Codec[CreatedAt]     = Codec.from(CreatedAt.deriving, CreatedAt.deriving)
+  implicit val codecUpdatedAt: Codec[UpdatedAt]     = Codec.from(UpdatedAt.deriving, UpdatedAt.deriving)
 
   implicit val codecAltitudeAccuracy: Codec[AltitudeAccuracy] =
     Codec.from(AltitudeAccuracy.deriving, AltitudeAccuracy.deriving)

@@ -12,14 +12,17 @@ create table if not exists groups (
  owner_device_id varchar(64) NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
  name varchar(128) not null,
  device_count numeric not null,
- created_at timestamp not null
+ is_private boolean not null,
+ created_at timestamp not null,
+ updated_at timestamp not null
 );
 
 create unique index if not exists groups_owner_device_id_name_idx on groups(owner_device_id, name);
 
 create table if not exists devices_groups (
  device_id varchar(64) NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
- group_id varchar(64) NOT NULL REFERENCES groups(id) ON DELETE CASCADE
+ group_id varchar(64) NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+ created_at timestamp not null
 );
 
 create unique index if not exists devices_groups_device_id_group_id_idx on devices_groups(device_id, group_id);

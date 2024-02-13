@@ -1,10 +1,13 @@
 package org.tomohavvk.walker.http.endpoints.bodies
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
+import org.tomohavvk.walker.protocol.Types.CreatedAt
 import org.tomohavvk.walker.protocol.Types.DeviceCount
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.GroupId
 import org.tomohavvk.walker.protocol.Types.GroupName
+import org.tomohavvk.walker.protocol.Types.IsPrivate
+import org.tomohavvk.walker.protocol.Types.UpdatedAt
 import org.tomohavvk.walker.protocol.commands.CreateGroupCommand
 import org.tomohavvk.walker.protocol.views.GroupView
 import sttp.tapir.Codec.JsonCodec
@@ -34,12 +37,15 @@ trait GroupExamples {
       name = GroupName("Walker Group"),
       deviceCount = DeviceCount(200),
       ownerDeviceId = DeviceId("C471D192-6B42-47C6-89EF-2BCD49DB603D"),
-      createdAt = LocalDateTime.now()
+      isPrivate = IsPrivate(true),
+      createdAt = CreatedAt(LocalDateTime.now()),
+      updatedAt = UpdatedAt(LocalDateTime.now())
     )
 
   protected val exampleCreateGroupCommand: CreateGroupCommand =
     CreateGroupCommand(
       name = GroupName("Walker Group"),
-      ownerDeviceId = DeviceId("C471D192-6B42-47C6-89EF-2BCD49DB603D")
+      ownerDeviceId = DeviceId("C471D192-6B42-47C6-89EF-2BCD49DB603D"),
+      isPrivate = IsPrivate(true)
     )
 }

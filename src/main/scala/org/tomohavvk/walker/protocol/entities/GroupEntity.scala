@@ -2,11 +2,11 @@ package org.tomohavvk.walker.protocol.entities
 
 import org.tomohavvk.walker.protocol.Types._
 
-import java.time.LocalDateTime
-
 case class GroupEntity(
   id:            GroupId,
+  ownerDeviceId: DeviceId,
   name:          GroupName,
   deviceCount:   DeviceCount,
-  ownerDeviceId: DeviceId,
-  createdAt:     LocalDateTime)
+  isPrivate:     IsPrivate,
+  createdAt:     CreatedAt,
+  updatedAt:     UpdatedAt)
