@@ -15,10 +15,11 @@ class OpenApiRoutes[H[_]: Async](endpoints: WalkerEndpoints) {
   private val e = List(
     endpoints.livenessEndpoint,
     endpoints.readinessEndpoint,
-    endpoints.getLatestDeviceLocationEndpoint,
-    endpoints.getDeviceEndpoint,
     endpoints.createDeviceEndpoint,
-    endpoints.createGroupEndpoint
+    endpoints.getDeviceEndpoint,
+    endpoints.createGroupEndpoint,
+    endpoints.joinGroupEndpoint,
+    endpoints.getLatestDeviceLocationEndpoint
   )
 
   private val openApiInfo: Info = Info(

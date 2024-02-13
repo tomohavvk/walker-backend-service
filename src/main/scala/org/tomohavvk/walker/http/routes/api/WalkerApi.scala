@@ -11,9 +11,11 @@ import org.tomohavvk.walker.BuildInfo.scalaVersion
 import org.tomohavvk.walker.BuildInfo.version
 import org.tomohavvk.walker.http.endpoints.WalkerEndpoints
 import org.tomohavvk.walker.http.routes.MappedHttp4sHttpEndpoint
+import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.views.ProbeView
 import org.tomohavvk.walker.services.DeviceService
+import org.tomohavvk.walker.services.DevicesGroupService
 import org.tomohavvk.walker.services.GroupService
 import org.tomohavvk.walker.services.LocationService
 import org.tomohavvk.walker.utils.UnliftF
@@ -24,6 +26,7 @@ class WalkerApi[F[_]: Applicative, H[_]: Async](
   endpoints:              WalkerEndpoints,
   deviceService:          DeviceService[F],
   groupService:           GroupService[F],
+  devicesGroupService:    DevicesGroupService[F],
   locationService:        LocationService[F]
 )(implicit serverOptions: Http4sServerOptions[H],
   U:                      UnliftF[F, H, AppError],
@@ -36,19 +39,30 @@ class WalkerApi[F[_]: Applicative, H[_]: Async](
     endpoints.readinessEndpoint.toRoutes(_ => Applicative[F].pure((Ok, probeView)))
 
   private val handleDeviceLocationRoute: HttpRoutes[H] =
-    endpoints.getLatestDeviceLocationEndpoint.toRoutes(meta => locationService.lastLocation(meta.deviceId))
+    endpoints.getLatestDeviceLocationEndpoint.toRoutes(meta =>
+      locationService.lastLocation(DeviceId(meta.authenticatedDeviceId.value))
+    )
 
   private val getDeviceRoute: HttpRoutes[H] =
-    endpoints.getDeviceEndpoint.toRoutes(meta => deviceService.findDevice(meta.deviceId))
+    endpoints.getDeviceEndpoint.toRoutes(meta => deviceService.getDevice(DeviceId(meta.authenticatedDeviceId.value)))
 
   private val createDeviceRoute: HttpRoutes[H] =
-    endpoints.createDeviceEndpoint.toRoutes(meta => deviceService.createDevice(meta.deviceId, meta.command))
+    endpoints.createDeviceEndpoint.toRoutes(meta =>
+      deviceService.register(DeviceId(meta.authenticatedDeviceId.value), meta.command)
+    )
 
   private val createGroupRoute: HttpRoutes[H] =
-    endpoints.createGroupEndpoint.toRoutes(meta => groupService.createGroup(meta.command))
+    endpoints.createGroupEndpoint.toRoutes(meta =>
+      groupService.createGroup(DeviceId(meta.authenticatedDeviceId.value), meta.command)
+    )
+
+  private val joinGroupRoute: HttpRoutes[H] =
+    endpoints.joinGroupEndpoint.toRoutes(meta =>
+      devicesGroupService.joinGroup(DeviceId(meta.authenticatedDeviceId.value), meta.groupId)
+    )
 
   private val probeView: ProbeView = ProbeView(name, "walker backend service", version, scalaVersion, sbtVersion)
 
   val routes =
-    healthProbe <+> readyProbe <+> handleDeviceLocationRoute <+> getDeviceRoute <+> createDeviceRoute <+> createGroupRoute
+    healthProbe <+> readyProbe <+> handleDeviceLocationRoute <+> getDeviceRoute <+> createDeviceRoute <+> createGroupRoute <+> joinGroupRoute
 }

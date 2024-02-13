@@ -1,5 +1,6 @@
 package org.tomohavvk.walker.module
 
+import org.tomohavvk.walker.http.endpoints.codecs.CommonCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.DeviceCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.ErrorCodecs
 import org.tomohavvk.walker.http.endpoints.codecs.GroupCodecs
@@ -17,6 +18,7 @@ case class Codecs(
   locationCodecs: LocationCodecs,
   deviceCodecs:   DeviceCodecs,
   groupCodecs:    GroupCodecs,
+  commonCodecs:   CommonCodecs,
   errorCodecs:    ErrorCodecs)
 
 object Codecs
@@ -28,12 +30,13 @@ object Codecs
 
   implicit val customConfiguration: TapirConfiguration = TapirConfiguration.default.withSnakeCaseMemberNames
 
-  val probeCodecs: ProbeCodecs       = ProbeCodecs()
-  val locationCodecs: LocationCodecs = LocationCodecs()
-  val deviceCodecs: DeviceCodecs     = DeviceCodecs()
-  val groupCodecs: GroupCodecs       = GroupCodecs()
-  val errorCodecs: ErrorCodecs       = ErrorCodecs()
+  val probeCodecs: ProbeCodecs         = ProbeCodecs()
+  val locationCodecs: LocationCodecs   = LocationCodecs()
+  val deviceCodecs: DeviceCodecs       = DeviceCodecs()
+  val groupCodecs: GroupCodecs         = GroupCodecs()
+  val commonCodecsCodecs: CommonCodecs = CommonCodecs()
+  val errorCodecs: ErrorCodecs         = ErrorCodecs()
 
-  def make: Codecs = Codecs(probeCodecs, locationCodecs, deviceCodecs, groupCodecs, errorCodecs)
+  def make: Codecs = Codecs(probeCodecs, locationCodecs, deviceCodecs, groupCodecs, commonCodecsCodecs, errorCodecs)
 
 }

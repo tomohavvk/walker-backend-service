@@ -42,8 +42,8 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
       transactor
         .withTxn(deviceLocationRepo.findLastById(deviceId))
         .flatMap {
-          case Some(value) => HF.applicative.pure(value.asView)
-          case None        => HF.raise(NotFoundError(s"Device: ${deviceId.value} not exists in the system"))
+          case Some(location) => HF.applicative.pure(location.asView)
+          case None           => HF.raise(NotFoundError(s"Device: ${deviceId.value} not exists in the system"))
         }
 
   override def upsertBatch(deviceId: DeviceId, locations: List[DeviceLocationEntity]): F[Int] = {

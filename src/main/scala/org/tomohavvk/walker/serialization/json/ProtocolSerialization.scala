@@ -12,9 +12,10 @@ import io.circe.Json
 import org.tomohavvk.walker.protocol.Types._
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.InternalError
-import org.tomohavvk.walker.protocol.commands.CreateDeviceCommand
+import org.tomohavvk.walker.protocol.commands.RegisterDeviceCommand
 import org.tomohavvk.walker.protocol.commands.CreateGroupCommand
 import org.tomohavvk.walker.protocol.views.AcknowledgeView
+import org.tomohavvk.walker.protocol.views.DeviceGroupView
 import org.tomohavvk.walker.protocol.views.DeviceLocationView
 import org.tomohavvk.walker.protocol.views.DeviceView
 import org.tomohavvk.walker.protocol.views.GroupView
@@ -44,13 +45,14 @@ trait ProtocolSerialization extends CirceConfig {
   implicit val codecAltitudeAccuracy: Codec[AltitudeAccuracy] =
     Codec.from(AltitudeAccuracy.deriving, AltitudeAccuracy.deriving)
 
-  implicit val codecDeviceLocationView: Codec[DeviceLocationView]   = deriveConfiguredCodec[DeviceLocationView]
-  implicit val codecAcknowledgeView: Codec[AcknowledgeView]         = deriveConfiguredCodec[AcknowledgeView]
-  implicit val codecDeviceView: Codec[DeviceView]                   = deriveConfiguredCodec[DeviceView]
-  implicit val codecGroupView: Codec[GroupView]                     = deriveConfiguredCodec[GroupView]
-  implicit val codecCreateDeviceCommand: Codec[CreateDeviceCommand] = deriveConfiguredCodec[CreateDeviceCommand]
-  implicit val codecCreateGroupCommand: Codec[CreateGroupCommand]   = deriveConfiguredCodec[CreateGroupCommand]
-  implicit val codecProbesView: Codec[ProbeView]                    = deriveConfiguredCodec[ProbeView]
+  implicit val codecDeviceLocationView: Codec[DeviceLocationView]     = deriveConfiguredCodec[DeviceLocationView]
+  implicit val codecAcknowledgeView: Codec[AcknowledgeView]           = deriveConfiguredCodec[AcknowledgeView]
+  implicit val codecDeviceView: Codec[DeviceView]                     = deriveConfiguredCodec[DeviceView]
+  implicit val codecDeviceGroupView: Codec[DeviceGroupView]           = deriveConfiguredCodec[DeviceGroupView]
+  implicit val codecGroupView: Codec[GroupView]                       = deriveConfiguredCodec[GroupView]
+  implicit val codecCreateDeviceCommand: Codec[RegisterDeviceCommand] = deriveConfiguredCodec[RegisterDeviceCommand]
+  implicit val codecCreateGroupCommand: Codec[CreateGroupCommand]     = deriveConfiguredCodec[CreateGroupCommand]
+  implicit val codecProbesView: Codec[ProbeView]                      = deriveConfiguredCodec[ProbeView]
 
   implicit lazy val codecAppError: Codec[AppError] = Codec.from(appErrorDecoder, appErrorEncoder)
 

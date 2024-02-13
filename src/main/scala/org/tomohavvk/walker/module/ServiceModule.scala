@@ -8,6 +8,8 @@ import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.services.DeviceService
 import org.tomohavvk.walker.services.DeviceServiceImpl
+import org.tomohavvk.walker.services.DevicesGroupService
+import org.tomohavvk.walker.services.DevicesGroupServiceImpl
 import org.tomohavvk.walker.services.GroupService
 import org.tomohavvk.walker.services.GroupServiceImpl
 import org.tomohavvk.walker.services.LocationService
@@ -16,9 +18,10 @@ import org.tomohavvk.walker.services.LocationServiceImpl
 object ServiceModule {
 
   case class ServicesDeps[F[_]](
-    locationService: LocationService[F],
-    deviceService:   DeviceService[F],
-    groupService:    GroupService[F])
+    locationService:     LocationService[F],
+    deviceService:       DeviceService[F],
+    groupService:        GroupService[F],
+    devicesGroupService: DevicesGroupService[F])
 
   def make[F[_]: Sync, D[_]: Sync](
     repositoriesDeps: RepositoriesDeps[D],
@@ -36,7 +39,13 @@ object ServiceModule {
     )
     val deviceService = new DeviceServiceImpl[F, D](repositoriesDeps.deviceRepository, transactor, loggerF)
     val groupService  = new GroupServiceImpl[F, D](repositoriesDeps.groupRepository, deviceService, transactor, loggerF)
+    val deviceGroupService = new DevicesGroupServiceImpl[F, D](repositoriesDeps.groupRepository,
+                                                               repositoriesDeps.deviceGroupRepository,
+                                                               deviceService,
+                                                               transactor,
+                                                               loggerF
+    )
 
-    ServicesDeps(locationService, deviceService, groupService)
+    ServicesDeps(locationService, deviceService, groupService, deviceGroupService)
   }
 }

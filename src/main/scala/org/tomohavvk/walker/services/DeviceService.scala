@@ -14,15 +14,16 @@ import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.persistence.repository.DeviceRepository
 import org.tomohavvk.walker.protocol.Types.CreatedAt
 import org.tomohavvk.walker.protocol.Types.DeviceId
-import org.tomohavvk.walker.protocol.commands.CreateDeviceCommand
+import org.tomohavvk.walker.protocol.commands.RegisterDeviceCommand
 import org.tomohavvk.walker.protocol.entities.DeviceEntity
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.NotFoundError
+import org.tomohavvk.walker.protocol.errors.UniqueConstraintError
 import org.tomohavvk.walker.protocol.views.DeviceView
 
 trait DeviceService[F[_]] {
-  def findDevice(deviceId:   DeviceId): F[DeviceView]
-  def createDevice(deviceId: DeviceId, command: CreateDeviceCommand): F[DeviceView]
+  def getDevice(deviceId: DeviceId): F[DeviceView]
+  def register(deviceId:  DeviceId, command: RegisterDeviceCommand): F[DeviceView]
 }
 
 class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
@@ -33,25 +34,31 @@ class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
   HD:          Handle[D, AppError])
     extends DeviceService[F] {
 
-  override def findDevice(deviceId: DeviceId): F[DeviceView] =
-    loggerF.debug("Find device request") >>
+  override def getDevice(deviceId: DeviceId): F[DeviceView] =
+    loggerF.debug("Get device request") >>
       transactor
         .withTxn(deviceRepo.findById(deviceId))
         .flatMap {
-          case Some(value) => HF.applicative.pure(value.transformInto[DeviceView])
-          case None        => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
+          case Some(device) => HF.applicative.pure(device.transformInto[DeviceView])
+          case None         => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
         }
 
-  override def createDevice(deviceId: DeviceId, command: CreateDeviceCommand): F[DeviceView] =
-    loggerF.debug("Create device request") >>
-      transactor.withTxn {
-        TimeGen[D].genTimeUtc.flatMap { createdAt =>
-          val entity = DeviceEntity(deviceId, command.name, CreatedAt(createdAt))
+  override def register(deviceId: DeviceId, command: RegisterDeviceCommand): F[DeviceView] =
+    loggerF.debug("Register device request") >>
+      transactor
+        .withTxn {
+          TimeGen[D].genTimeUtc.flatMap { createdAt =>
+            val entity = DeviceEntity(deviceId, command.name, CreatedAt(createdAt))
 
-          deviceRepo
-            .upsert(entity)
-            .as(entity.transformInto[DeviceView])
-            .handleWith[AppError](error => HD.raise(error))
+            deviceRepo
+              .upsert(entity)
+              .as(entity.transformInto[DeviceView])
+              .handleWith[AppError](error => HD.raise(error))
+          }
         }
-      }
+        .handleWith[AppError] {
+          case error: UniqueConstraintError =>
+            HF.raise(error.copy(message = "Device with same device_id already registered"))
+          case error => HF.raise(error)
+        }
 }

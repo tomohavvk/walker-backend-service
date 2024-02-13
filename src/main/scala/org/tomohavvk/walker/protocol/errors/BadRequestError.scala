@@ -5,7 +5,7 @@ import org.tomohavvk.walker.protocol.Types.ErrorCode
 import org.tomohavvk.walker.protocol.Types.HttpCode
 import org.tomohavvk.walker.protocol.Types.LogErrorMessage
 
-case class BadRequestError(internalMessage: String, message: String = "Internal Error")
+case class BadRequestError(message: String, internalMessage: String = "Internal Error")
     extends AppError(apiMessage = ApiErrorMessage(message),
                      code = ErrorCode("bad_request_error"),
                      httpCode = HttpCode(400),

@@ -6,18 +6,16 @@ import org.tomohavvk.walker.http.endpoints.bodies.LocationBodies
 import org.tomohavvk.walker.http.endpoints.bodies.ProbeBodies
 import org.tomohavvk.walker.http.endpoints.codecs.ErrorCodecs
 import org.tomohavvk.walker.http.endpoints.mappings.ErrorMappings
-import org.tomohavvk.walker.http.endpoints.metas.CreateDeviceCommandMeta
 import org.tomohavvk.walker.http.endpoints.metas.CreateGroupCommandMeta
-import org.tomohavvk.walker.http.endpoints.metas.EmptyCommandMeta
+import org.tomohavvk.walker.http.endpoints.metas.EmptyBodyCommandMeta
+import org.tomohavvk.walker.http.endpoints.metas.JoinGroupCommandMeta
+import org.tomohavvk.walker.http.endpoints.metas.RegisterDeviceCommandMeta
 import org.tomohavvk.walker.http.endpoints.schemas.EndpointSchemas
 import org.tomohavvk.walker.module.Codecs
-import org.tomohavvk.walker.protocol.Types.DeviceId
-import org.tomohavvk.walker.protocol.Types.TraceId
+import org.tomohavvk.walker.protocol.Types.GroupId
+import org.tomohavvk.walker.protocol.Types.XAuthDeviceId
 import org.tomohavvk.walker.protocol.views.ProbeView
 import sttp.model.StatusCode
-import sttp.tapir.endpoint
-import sttp.tapir.oneOf
-import sttp.tapir.statusCode
 import sttp.tapir._
 
 class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
@@ -27,6 +25,7 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
     with GroupBodies
     with LocationBodies {
 
+  import codecs.commonCodecs._
   import codecs.deviceCodecs._
   import codecs.groupCodecs._
   import codecs.locationCodecs._
@@ -55,7 +54,7 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
   val getLatestDeviceLocationEndpoint =
     apiV1Endpoint
       .in("devices")
-      .in(deviceIdPath.and(traceIdHeader).mapTo[EmptyCommandMeta])
+      .in(authDeviceIdHeader.mapTo[EmptyBodyCommandMeta])
       .in("location")
       .tag("location")
       .summary("Endpoint for fetch latest device location")
@@ -68,10 +67,10 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
   val createDeviceEndpoint =
     apiV1Endpoint
       .in("devices")
-      .in(deviceIdPath.and(traceIdHeader).and(bodyForCreateDeviceCommand).mapTo[CreateDeviceCommandMeta])
+      .in(authDeviceIdHeader.and(bodyForRegisterDeviceCommand).mapTo[RegisterDeviceCommandMeta])
       .tag("devices")
-      .summary("Endpoint for create device")
-      .description("Endpoint for create device")
+      .summary("Endpoint for register device")
+      .description("Endpoint for register device")
       .post
       .errorOut(oneOf(internalErrorStatusMapping, alreadyExistsErrorStatusMapping, badRequestStatusMapping))
       .out(bodyForDeviceView)
@@ -80,10 +79,10 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
   val getDeviceEndpoint =
     apiV1Endpoint
       .in("devices")
-      .in(deviceIdPath.and(traceIdHeader).mapTo[EmptyCommandMeta])
+      .in(authDeviceIdHeader.mapTo[EmptyBodyCommandMeta])
       .tag("devices")
-      .summary("Endpoint for fetch actual device entity")
-      .description("Endpoint for fetch actual device entity")
+      .summary("Endpoint for get device info")
+      .description("Endpoint for get device info")
       .get
       .errorOut(oneOf(internalErrorStatusMapping, notFoundErrorStatusMapping, badRequestStatusMapping))
       .out(bodyForDeviceView)
@@ -92,7 +91,7 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
   val createGroupEndpoint =
     apiV1Endpoint
       .in("groups")
-      .in(traceIdHeader.and(bodyForCreateGroupCommand).mapTo[CreateGroupCommandMeta])
+      .in(authDeviceIdHeader.and(bodyForCreateGroupCommand).mapTo[CreateGroupCommandMeta])
       .tag("groups")
       .summary("Endpoint for create group")
       .description("Endpoint for create group")
@@ -107,23 +106,35 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
       .out(bodyForGroupView)
       .out(statusCode(StatusCode.Ok))
 
-  private def deviceIdPath: EndpointInput.PathCapture[DeviceId] =
-    path[DeviceId]
-      .name("deviceId")
-      .schema(EndpointSchemas.tapirDeviceIdSchema)
-      .description("Device ID")
-      .example(DeviceId("C471D192-6B42-47C6-89EF-2BCD49DB603D"))
+  val joinGroupEndpoint =
+    apiV1Endpoint
+      .in("groups")
+      .in(authDeviceIdHeader.and(groupIdPath).mapTo[JoinGroupCommandMeta])
+      .in("join")
+      .tag("groups")
+      .summary("Endpoint for join group")
+      .description("Endpoint for join group")
+      .post
+      .errorOut(
+        oneOf(internalErrorStatusMapping,
+              alreadyExistsErrorStatusMapping,
+              notFoundErrorStatusMapping,
+              badRequestStatusMapping
+        )
+      )
+      .out(bodyForDeviceGroupView)
+      .out(statusCode(StatusCode.Ok))
 
-  private def groupIdPath: EndpointInput.PathCapture[DeviceId] =
-    path[DeviceId]
+  private def groupIdPath: EndpointInput.PathCapture[GroupId] =
+    path[GroupId]
       .name("groupId")
-      .schema(EndpointSchemas.tapirDeviceIdSchema)
+      .schema(EndpointSchemas.tapirGroupIdSchema)
       .description("Group ID")
-      .example(DeviceId("953a5959-1b0f-412a-bdab-1cbe15486a28"))
+      .example(GroupId("729d378c-1a64-4245-9569-2d1109dc9bdc"))
 
-  private def traceIdHeader: EndpointIO.Header[TraceId] =
-    header[TraceId]("X-Trace-Id")
-      .description("A unique trace ID")
-      .example(TraceId("953a5959-1b0f-412a-bdab-1cbe15486a28"))
+  private def authDeviceIdHeader: EndpointIO.Header[XAuthDeviceId] =
+    header[XAuthDeviceId]("X-Auth-Device-Id")
+      .description("Authenticated device id")
+      .example(XAuthDeviceId("C471D192-6B42-47C6-89EF-2BCD49DB603D"))
 
 }

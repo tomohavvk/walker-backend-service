@@ -31,7 +31,12 @@ object HttpModule {
     implicit val option: Http4sServerOptions[H] = makeOptions[H](codecs)
     val walkerEndpoints                         = new WalkerEndpoints(codecs.errorCodecs, codecs)
     val walkerApi =
-      new WalkerApi[F, H](walkerEndpoints, services.deviceService, services.groupService, services.locationService)
+      new WalkerApi[F, H](walkerEndpoints,
+                          services.deviceService,
+                          services.groupService,
+                          services.devicesGroupService,
+                          services.locationService
+      )
 
     val openApi = new OpenApiRoutes[H](walkerEndpoints)
 

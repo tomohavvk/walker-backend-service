@@ -15,6 +15,7 @@ import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.persistence.repository.GroupRepository
 import org.tomohavvk.walker.protocol.Types.CreatedAt
 import org.tomohavvk.walker.protocol.Types.DeviceCount
+import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.GroupId
 import org.tomohavvk.walker.protocol.Types.UpdatedAt
 import org.tomohavvk.walker.protocol.commands.CreateGroupCommand
@@ -24,7 +25,7 @@ import org.tomohavvk.walker.protocol.errors.UniqueConstraintError
 import org.tomohavvk.walker.protocol.views.GroupView
 
 trait GroupService[F[_]] {
-  def createGroup(command: CreateGroupCommand): F[GroupView]
+  def createGroup(deviceId: DeviceId, command: CreateGroupCommand): F[GroupView]
 }
 
 class GroupServiceImpl[F[_]: Monad, D[_]: Sync](
@@ -36,16 +37,16 @@ class GroupServiceImpl[F[_]: Monad, D[_]: Sync](
   HD:            Handle[D, AppError])
     extends GroupService[F] {
 
-  override def createGroup(command: CreateGroupCommand): F[GroupView] =
+  override def createGroup(deviceId: DeviceId, command: CreateGroupCommand): F[GroupView] =
     loggerF.debug("Create group request") >>
-      deviceService.findDevice(command.ownerDeviceId) >>
+      deviceService.getDevice(deviceId) >>
       transactor
         .withTxn {
 
           NanoIdGen[D].randomNanoId.flatMap { nanoId =>
             TimeGen[D].genTimeUtc.flatMap { createdAt =>
               val entity = GroupEntity(GroupId(nanoId),
-                                       command.ownerDeviceId,
+                                       deviceId,
                                        command.name,
                                        DeviceCount(1),
                                        command.isPrivate,

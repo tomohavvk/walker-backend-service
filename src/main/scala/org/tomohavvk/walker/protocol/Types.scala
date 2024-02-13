@@ -26,6 +26,7 @@ object Types {
   @newtype case class UpdatedAt(value: LocalDateTime)
 
   @newtype case class TraceId(value: String)
+  @newtype case class XAuthDeviceId(value: String)
   @newtype case class ApiErrorMessage(value: String)
   @newtype case class ErrorCode(value: String)
   @newtype case class HttpCode(value: Int)

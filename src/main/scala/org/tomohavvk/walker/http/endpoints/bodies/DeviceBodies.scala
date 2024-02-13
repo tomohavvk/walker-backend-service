@@ -3,7 +3,7 @@ package org.tomohavvk.walker.http.endpoints.bodies
 import org.tomohavvk.walker.protocol.Types.CreatedAt
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.DeviceName
-import org.tomohavvk.walker.protocol.commands.CreateDeviceCommand
+import org.tomohavvk.walker.protocol.commands.RegisterDeviceCommand
 import org.tomohavvk.walker.protocol.views.DeviceView
 import sttp.tapir.Codec.JsonCodec
 import sttp.tapir.EndpointIO.Body
@@ -18,10 +18,10 @@ trait DeviceBodies extends DeviceExamples {
   ): Body[String, DeviceView] =
     customCodecJsonBody[DeviceView].example(exampleDeviceView)
 
-  protected def bodyForCreateDeviceCommand(
-    implicit codec: JsonCodec[CreateDeviceCommand]
-  ): Body[String, CreateDeviceCommand] =
-    customCodecJsonBody[CreateDeviceCommand].example(exampleCreateDeviceCommand)
+  protected def bodyForRegisterDeviceCommand(
+    implicit codec: JsonCodec[RegisterDeviceCommand]
+  ): Body[String, RegisterDeviceCommand] =
+    customCodecJsonBody[RegisterDeviceCommand].example(exampleRegisterDeviceCommand)
 }
 
 trait DeviceExamples {
@@ -33,8 +33,8 @@ trait DeviceExamples {
       createdAt = CreatedAt(LocalDateTime.now())
     )
 
-  protected val exampleCreateDeviceCommand: CreateDeviceCommand =
-    CreateDeviceCommand(
+  protected val exampleRegisterDeviceCommand: RegisterDeviceCommand =
+    RegisterDeviceCommand(
       name = DeviceName("Walker Device")
     )
 }

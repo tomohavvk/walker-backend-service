@@ -38,7 +38,7 @@ trait ErrorExamples {
   protected val notFoundErrorExample: AppError = NotFoundError("The requested entity can't be found")
 
   protected val badRequestErrorExample: AppError =
-    BadRequestError("Internal error", "The request contains bad syntax or cannot be fulfilled.")
+    BadRequestError("The request is bad", "Internal message")
 
   protected val alreadyExistsErrorExample: AppError =
     UniqueConstraintError("Entity already exists")
