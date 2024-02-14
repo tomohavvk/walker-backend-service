@@ -9,7 +9,7 @@ import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.services.DeviceService
 import org.tomohavvk.walker.services.DeviceServiceImpl
 import org.tomohavvk.walker.services.DevicesGroupService
-import org.tomohavvk.walker.services.DevicesGroupServiceImpl
+import org.tomohavvk.walker.services.DeviceGroupServiceImpl
 import org.tomohavvk.walker.services.GroupService
 import org.tomohavvk.walker.services.GroupServiceImpl
 import org.tomohavvk.walker.services.LocationService
@@ -39,11 +39,11 @@ object ServiceModule {
     )
     val deviceService = new DeviceServiceImpl[F, D](repositoriesDeps.deviceRepository, transactor, loggerF)
     val groupService  = new GroupServiceImpl[F, D](repositoriesDeps.groupRepository, deviceService, transactor, loggerF)
-    val deviceGroupService = new DevicesGroupServiceImpl[F, D](repositoriesDeps.groupRepository,
-                                                               repositoriesDeps.deviceGroupRepository,
-                                                               deviceService,
-                                                               transactor,
-                                                               loggerF
+    val deviceGroupService = new DeviceGroupServiceImpl[F, D](repositoriesDeps.groupRepository,
+                                                              repositoriesDeps.deviceGroupRepository,
+                                                              deviceService,
+                                                              transactor,
+                                                              loggerF
     )
 
     ServicesDeps(locationService, deviceService, groupService, deviceGroupService)

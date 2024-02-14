@@ -48,12 +48,11 @@ class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
       transactor
         .withTxn {
           TimeGen[D].genTimeUtc.flatMap { createdAt =>
-            val entity = DeviceEntity(deviceId, command.name, CreatedAt(createdAt))
-
             deviceRepo
-              .upsert(entity)
-              .as(entity.transformInto[DeviceView])
-              .handleWith[AppError](error => HD.raise(error))
+              .upsert {
+                DeviceEntity(deviceId, command.name, CreatedAt(createdAt))
+              }
+              .map(_.transformInto[DeviceView])
           }
         }
         .handleWith[AppError] {

@@ -48,6 +48,7 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
 
   override def upsertBatch(deviceId: DeviceId, locations: List[DeviceLocationEntity]): F[Int] = {
     val sorted = locations.sortWith((x, y) => x.time.isBefore(y.time))
+
     debug(deviceId, s"Upserting batch of locations. Size: ${locations.size}") >>
       transactor
         .withTxn(deviceLocationRepo.upsertBatch(sorted))
@@ -60,9 +61,10 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
   }
 
   private def createDevice(deviceId: DeviceId): D[Unit] =
-    TimeGen[D].genTimeUtc.flatMap { createdAt =>
-      deviceRepo.upsert(DeviceEntity(deviceId, DeviceName("Walker"), CreatedAt(createdAt))).void
-    }
+    TimeGen[D].genTimeUtc
+      .map(createdAt => DeviceEntity(deviceId, DeviceName("Walker"), CreatedAt(createdAt)))
+      .flatMap(deviceRepo.upsert)
+      .void
 
   private def debug(deviceId: DeviceId, message: String): F[Unit] =
     loggerF

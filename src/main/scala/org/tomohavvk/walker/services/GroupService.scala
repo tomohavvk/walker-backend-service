@@ -41,27 +41,24 @@ class GroupServiceImpl[F[_]: Monad, D[_]: Sync](
     loggerF.debug("Create group request") >>
       deviceService.getDevice(deviceId) >>
       transactor
-        .withTxn {
-
-          NanoIdGen[D].randomNanoId.flatMap { nanoId =>
-            TimeGen[D].genTimeUtc.flatMap { createdAt =>
-              val entity = GroupEntity(GroupId(nanoId),
-                                       deviceId,
-                                       command.name,
-                                       DeviceCount(1),
-                                       command.isPrivate,
-                                       CreatedAt(createdAt),
-                                       UpdatedAt(createdAt)
-              )
-
-              groupRepo
-                .upsert(entity)
-                .as(entity.transformInto[GroupView])
-            }
-          }
-        }
+        .withTxn(makeEntity(deviceId, command).flatMap(groupRepo.upsert).map(_.transformInto[GroupView]))
         .handleWith[AppError] {
           case error: UniqueConstraintError => HF.raise(error.copy(message = "Group with same name already exists"))
           case error                        => HF.raise(error)
         }
+        .flatTap(_ => loggerF.debug("Create group success"))
+
+  private def makeEntity(deviceId: DeviceId, command: CreateGroupCommand): D[GroupEntity] =
+    TimeGen[D].genTimeUtc.flatMap { createdAt =>
+      NanoIdGen[D].randomNanoId.map { nanoId =>
+        command
+          .into[GroupEntity]
+          .withFieldConst(_.id, GroupId(nanoId))
+          .withFieldConst(_.ownerDeviceId, deviceId)
+          .withFieldConst(_.deviceCount, DeviceCount(1))
+          .withFieldConst(_.createdAt, CreatedAt(createdAt))
+          .withFieldConst(_.updatedAt, UpdatedAt(createdAt))
+          .transform
+      }
+    }
 }

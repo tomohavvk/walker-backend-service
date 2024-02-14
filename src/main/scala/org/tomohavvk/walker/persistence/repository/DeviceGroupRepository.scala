@@ -1,5 +1,7 @@
 package org.tomohavvk.walker.persistence.repository
 
+import cats.Monad
+import cats.implicits.toFunctorOps
 import doobie.implicits._
 import org.tomohavvk.walker.persistence._
 import org.tomohavvk.walker.protocol.Types.DeviceId
@@ -9,16 +11,16 @@ import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.utils.LiftConnectionIO
 
 trait DeviceGroupRepository[D[_]] {
-  def upsert(entity:     DeviceGroupEntity): D[Int]
+  def upsert(entity:     DeviceGroupEntity): D[DeviceGroupEntity]
   def findById(deviceId: DeviceId, groupId: GroupId): D[Option[DeviceGroupEntity]]
 }
 
-class DoobieDeviceGroupRepository[D[_]](implicit D: LiftConnectionIO[D, AppError])
+class DoobieDeviceGroupRepository[D[_]: Monad](implicit D: LiftConnectionIO[D, AppError])
     extends DeviceGroupRepository[D]
     with DeviceGroupQueries {
 
-  override def upsert(entity: DeviceGroupEntity): D[Int] =
-    D.lift(upsertQuery(entity).run)
+  override def upsert(entity: DeviceGroupEntity): D[DeviceGroupEntity] =
+    D.lift(upsertQuery(entity).run).as(entity)
 
   override def findById(deviceId: DeviceId, groupId: GroupId): D[Option[DeviceGroupEntity]] =
     D.lift(findByIdQuery(deviceId, groupId).option)

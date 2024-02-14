@@ -1,5 +1,6 @@
 package org.tomohavvk.walker.module
 
+import cats.Monad
 import org.tomohavvk.walker.persistence.repository.DeviceGroupRepository
 import org.tomohavvk.walker.persistence.repository.DeviceLocationRepository
 import org.tomohavvk.walker.persistence.repository.DeviceRepository
@@ -19,7 +20,7 @@ object RepositoryModule {
     deviceGroupRepository:    DeviceGroupRepository[D],
     deviceLocationRepository: DeviceLocationRepository[D])
 
-  def make[D[_]]()(implicit D: LiftConnectionIO[D, AppError]): RepositoriesDeps[D] =
+  def make[D[_]: Monad]()(implicit D: LiftConnectionIO[D, AppError]): RepositoriesDeps[D] =
     RepositoriesDeps(new DoobieDeviceRepository[D](),
                      new DoobieGroupRepository[D](),
                      new DoobieDeviceGroupRepository[D](),
