@@ -38,7 +38,7 @@ object ServiceModule {
                                                         loggerD
     )
     val deviceService = new DeviceServiceImpl[F, D](repositoriesDeps.deviceRepository, transactor, loggerF)
-    val groupService  = new GroupServiceImpl[F, D](repositoriesDeps.groupRepository, deviceService, transactor, loggerF)
+    val groupService  = new GroupServiceImpl[F, D](repositoriesDeps.groupRepository, transactor, loggerF)
     val deviceGroupService = new DeviceGroupServiceImpl[F, D](repositoriesDeps.groupRepository,
                                                               repositoriesDeps.deviceGroupRepository,
                                                               deviceService,

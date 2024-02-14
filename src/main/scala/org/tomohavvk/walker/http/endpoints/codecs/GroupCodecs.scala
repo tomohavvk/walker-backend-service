@@ -8,6 +8,7 @@ import sttp.tapir.Codec.JsonCodec
 
 case class GroupCodecs(
 )(implicit val codecGroupView: JsonCodec[GroupView],
+  val codecListOfGroupView:    JsonCodec[List[GroupView]],
   val codecDeviceGroupView:    JsonCodec[DeviceGroupView],
   val codecCreateGroupCommand: JsonCodec[CreateGroupCommand])
     extends EndpointSchemas

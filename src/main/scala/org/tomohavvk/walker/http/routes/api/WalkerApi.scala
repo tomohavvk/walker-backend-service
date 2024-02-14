@@ -56,6 +56,11 @@ class WalkerApi[F[_]: Applicative, H[_]: Async](
       groupService.createGroup(DeviceId(meta.authenticatedDeviceId.value), meta.command)
     )
 
+  private val getAllDeviceGroupRoute: HttpRoutes[H] =
+    endpoints.getAllDeviceGroupEndpoint.toRoutes(meta =>
+      groupService.getAllDeviceOwnedOrJoinedGroups(DeviceId(meta.authenticatedDeviceId.value))
+    )
+
   private val joinGroupRoute: HttpRoutes[H] =
     endpoints.joinGroupEndpoint.toRoutes(meta =>
       devicesGroupService.joinGroup(DeviceId(meta.authenticatedDeviceId.value), meta.groupId)
@@ -64,5 +69,5 @@ class WalkerApi[F[_]: Applicative, H[_]: Async](
   private val probeView: ProbeView = ProbeView(name, "walker backend service", version, scalaVersion, sbtVersion)
 
   val routes =
-    healthProbe <+> readyProbe <+> handleDeviceLocationRoute <+> getDeviceRoute <+> createDeviceRoute <+> createGroupRoute <+> joinGroupRoute
+    healthProbe <+> readyProbe <+> handleDeviceLocationRoute <+> getDeviceRoute <+> createDeviceRoute <+> createGroupRoute <+> joinGroupRoute <+> getAllDeviceGroupRoute
 }

@@ -23,6 +23,11 @@ trait GroupBodies extends GroupExamples {
   ): Body[String, GroupView] =
     customCodecJsonBody[GroupView].example(exampleGroupView)
 
+  protected def bodyForListOfGroupView(
+    implicit codec: JsonCodec[List[GroupView]]
+  ): Body[String, List[GroupView]] =
+    customCodecJsonBody[List[GroupView]].example(List(exampleGroupView))
+
   protected def bodyForDeviceGroupView(
     implicit codec: JsonCodec[DeviceGroupView]
   ): Body[String, DeviceGroupView] =

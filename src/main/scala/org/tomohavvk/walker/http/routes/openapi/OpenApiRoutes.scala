@@ -17,6 +17,7 @@ class OpenApiRoutes[H[_]: Async](endpoints: WalkerEndpoints) {
     endpoints.readinessEndpoint,
     endpoints.createDeviceEndpoint,
     endpoints.getDeviceEndpoint,
+    endpoints.getAllDeviceGroupEndpoint,
     endpoints.createGroupEndpoint,
     endpoints.joinGroupEndpoint,
     endpoints.getLatestDeviceLocationEndpoint

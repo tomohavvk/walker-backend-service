@@ -53,8 +53,8 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
 
   val getLatestDeviceLocationEndpoint =
     apiV1Endpoint
-      .in("devices")
       .in(authDeviceIdHeader.mapTo[EmptyBodyCommandMeta])
+      .in("devices")
       .in("location")
       .tag("location")
       .summary("Endpoint for fetch latest device location")
@@ -66,8 +66,8 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
 
   val createDeviceEndpoint =
     apiV1Endpoint
-      .in("devices")
       .in(authDeviceIdHeader.and(bodyForRegisterDeviceCommand).mapTo[RegisterDeviceCommandMeta])
+      .in("devices")
       .tag("devices")
       .summary("Endpoint for register device")
       .description("Endpoint for register device")
@@ -78,8 +78,8 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
 
   val getDeviceEndpoint =
     apiV1Endpoint
-      .in("devices")
       .in(authDeviceIdHeader.mapTo[EmptyBodyCommandMeta])
+      .in("devices")
       .tag("devices")
       .summary("Endpoint for get device info")
       .description("Endpoint for get device info")
@@ -90,8 +90,8 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
 
   val createGroupEndpoint =
     apiV1Endpoint
-      .in("groups")
       .in(authDeviceIdHeader.and(bodyForCreateGroupCommand).mapTo[CreateGroupCommandMeta])
+      .in("groups")
       .tag("groups")
       .summary("Endpoint for create group")
       .description("Endpoint for create group")
@@ -108,8 +108,8 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
 
   val joinGroupEndpoint =
     apiV1Endpoint
-      .in("groups")
       .in(authDeviceIdHeader.and(groupIdPath).mapTo[JoinGroupCommandMeta])
+      .in("groups")
       .in("join")
       .tag("groups")
       .summary("Endpoint for join group")
@@ -123,6 +123,18 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
         )
       )
       .out(bodyForDeviceGroupView)
+      .out(statusCode(StatusCode.Ok))
+
+  val getAllDeviceGroupEndpoint =
+    apiV1Endpoint
+      .in(authDeviceIdHeader.mapTo[EmptyBodyCommandMeta])
+      .in("groups")
+      .tag("groups")
+      .summary("Endpoint for get all device owner or joined groups")
+      .description("Endpoint for get all device owner or joined groups")
+      .get
+      .errorOut(oneOf(internalErrorStatusMapping, badRequestStatusMapping))
+      .out(bodyForListOfGroupView)
       .out(statusCode(StatusCode.Ok))
 
   private def groupIdPath: EndpointInput.PathCapture[GroupId] =
