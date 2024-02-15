@@ -2,6 +2,7 @@ package org.tomohavvk.walker.services
 
 import cats.effect.kernel.Clock
 import cats.effect.kernel.Sync
+import cats.syntax.applicative._
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
 import cats.implicits.toFunctorOps
@@ -39,7 +40,7 @@ class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
       transactor
         .withTxn(deviceRepo.findById(deviceId))
         .flatMap {
-          case Some(device) => HF.applicative.pure(device.transformInto[DeviceView])
+          case Some(device) => device.transformInto[DeviceView].pure[F]
           case None         => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
         }
 

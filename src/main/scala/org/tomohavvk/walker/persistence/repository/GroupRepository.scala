@@ -49,7 +49,7 @@ trait GroupQueries extends DoobieMeta {
 
   def findAllByDeviceIdQuery(deviceId: DeviceId): doobie.Query0[GroupEntity] =
     fr"""SELECT groups.id, groups.owner_device_id, groups.name, groups.device_count, groups.is_private, groups.created_at, groups.updated_at FROM groups
-        JOIN devices_groups on groups.id = devices_groups.group_id
+        LEFT JOIN devices_groups on groups.id = devices_groups.group_id
         WHERE groups.owner_device_id = $deviceId or devices_groups.device_id = $deviceId"""
       .query[GroupEntity]
 

@@ -4,6 +4,7 @@ import cats.effect.kernel.Clock
 import cats.effect.kernel.Sync
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
+import cats.syntax.applicative._
 import cats.implicits.toFunctorOps
 import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
@@ -42,7 +43,7 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
       transactor
         .withTxn(deviceLocationRepo.findLastById(deviceId))
         .flatMap {
-          case Some(location) => HF.applicative.pure(location.asView)
+          case Some(location) => location.asView.pure[F]
           case None           => HF.raise(NotFoundError(s"Device: ${deviceId.value} not exists in the system"))
         }
 

@@ -2,6 +2,7 @@ package org.tomohavvk.walker.services
 
 import cats.Monad
 import cats.effect.kernel.Sync
+import cats.syntax.applicative._
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
 import cats.implicits.toFunctorOps
@@ -61,7 +62,7 @@ class DeviceGroupServiceImpl[F[_]: Monad, D[_]: Sync](
       case None                                           => HD.raise(NotFoundError(s"Group: ${groupId.value} not found"))
       case Some(group) if group.ownerDeviceId == deviceId => HD.raise(BadRequestError("Can't join your own group"))
       case Some(group) if group.isPrivate.value           => HD.raise(BadRequestError("Group is private. Access denied"))
-      case Some(group)                                    => HD.applicative.pure(group)
+      case Some(group)                                    => group.pure[D]
     }
 
   private def joinDeviceToGroup(deviceId: DeviceId, group: GroupEntity): D[DeviceGroupEntity] =
