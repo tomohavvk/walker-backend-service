@@ -4,10 +4,10 @@ import cats.effect.kernel.Clock
 import cats.effect.kernel.Sync
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
-import cats.syntax.applicative._
 import cats.implicits.toFunctorOps
 import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
+import cats.syntax.applicative._
 import io.odin.Logger
 import org.tomohavvk.walker.generation.TimeGen
 import org.tomohavvk.walker.persistence.Transactor
@@ -18,14 +18,12 @@ import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.DeviceName
 import org.tomohavvk.walker.protocol.entities.DeviceEntity
 import org.tomohavvk.walker.protocol.entities.DeviceLocationEntity
-import org.tomohavvk.walker.protocol.entities.DeviceLocationEntity.DeviceLocationEntityExt
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.NotFoundError
 import org.tomohavvk.walker.protocol.errors.ViolatesForeignKeyError
-import org.tomohavvk.walker.protocol.views.DeviceLocationView
 
 trait LocationService[F[_]] {
-  def lastLocation(deviceId: DeviceId): F[DeviceLocationView]
+  def lastLocation(deviceId: DeviceId): F[DeviceLocationEntity]
   def upsertBatch(deviceId:  DeviceId, locations: List[DeviceLocationEntity]): F[Int]
 }
 
@@ -38,12 +36,12 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
 )(implicit HF:        Handle[F, AppError])
     extends LocationService[F] {
 
-  override def lastLocation(deviceId: DeviceId): F[DeviceLocationView] =
+  override def lastLocation(deviceId: DeviceId): F[DeviceLocationEntity] =
     loggerF.debug("Device last location request") >>
       transactor
         .withTxn(deviceLocationRepo.findLastById(deviceId))
         .flatMap {
-          case Some(location) => location.asView.pure[F]
+          case Some(location) => location.pure[F]
           case None           => HF.raise(NotFoundError(s"Device: ${deviceId.value} not exists in the system"))
         }
 

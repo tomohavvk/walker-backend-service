@@ -20,7 +20,7 @@ import org.tomohavvk.walker.utils.UnliftF
 class Lifecycle[F[_]: Async, D[_], H[_]: Async: Console](
   configs:     Configs,
   logger:      Logger[H],
-  httpServer:  HttpServer[H],
+  httpServer:  HttpServer[F, H],
   eventStream: DeviceLocationEventStream[F, D]
 )(implicit U:  UnliftF[F, H, AppError]) {
 

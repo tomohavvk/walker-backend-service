@@ -10,6 +10,7 @@ import sttp.tapir.Codec.JsonCodec
 import sttp.tapir.DecodeResult.InvalidValue
 import sttp.tapir.server.interceptor.DecodeFailureContext
 import sttp.tapir.server.model.ValuedEndpointOutput
+import sttp.tapir.server.interceptor.decodefailure.DecodeFailureHandler
 import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler
 import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler.ValidationMessages
 import sttp.tapir.DecodeResult
@@ -21,11 +22,13 @@ import sttp.tapir.statusCode
 
 import scala.annotation.tailrec
 
-trait ErrorHandling {
+case class ErrorHandling[H[_]]() {
 
-  def decodeFailureHandler(implicit errorCodecs: ErrorCodecs): DefaultDecodeFailureHandler = {
+  def decodeFailureHandler(implicit errorCodecs: ErrorCodecs): DecodeFailureHandler[H] = {
     import errorCodecs._
-    DefaultDecodeFailureHandler.default.copy(
+
+    DefaultDecodeFailureHandler.apply(
+      respond = DefaultDecodeFailureHandler.respond,
       response = failureResponse,
       failureMessage = failureMessage
     )
@@ -87,5 +90,3 @@ trait ErrorHandling {
     }
 
 }
-
-object ErrorHandling extends ErrorHandling

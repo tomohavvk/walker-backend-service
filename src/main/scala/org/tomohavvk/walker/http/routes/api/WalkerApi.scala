@@ -1,9 +1,12 @@
 package org.tomohavvk.walker.http.routes.api
 
 import cats.Applicative
+import cats.Functor
 import cats.effect.kernel.Async
+import cats.implicits.toFunctorOps
 import cats.implicits.toSemigroupKOps
 import io.odin.Logger
+import io.scalaland.chimney.dsl.TransformerOps
 import org.http4s.HttpRoutes
 import org.tomohavvk.walker.BuildInfo.name
 import org.tomohavvk.walker.BuildInfo.sbtVersion
@@ -13,6 +16,8 @@ import org.tomohavvk.walker.http.endpoints.WalkerEndpoints
 import org.tomohavvk.walker.http.routes.MappedHttp4sHttpEndpoint
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.errors.AppError
+import org.tomohavvk.walker.protocol.views.DeviceView
+import org.tomohavvk.walker.protocol.views.GroupView
 import org.tomohavvk.walker.protocol.views.ProbeView
 import org.tomohavvk.walker.services.DeviceService
 import org.tomohavvk.walker.services.DevicesGroupService
@@ -22,7 +27,8 @@ import org.tomohavvk.walker.utils.UnliftF
 import sttp.model.StatusCode.Ok
 import sttp.tapir.server.http4s.Http4sServerOptions
 
-class WalkerApi[F[_]: Applicative, H[_]: Async](
+// VIEW transformation for all entities should be here. Remove from service layer
+class WalkerApi[F[_]: Functor: Applicative, H[_]: Async](
   endpoints:              WalkerEndpoints,
   deviceService:          DeviceService[F],
   groupService:           GroupService[F],
@@ -40,25 +46,29 @@ class WalkerApi[F[_]: Applicative, H[_]: Async](
 
   private val handleDeviceLocationRoute: HttpRoutes[H] =
     endpoints.getLatestDeviceLocationEndpoint.toRoutes(meta =>
-      locationService.lastLocation(DeviceId(meta.authenticatedDeviceId.value))
+      locationService.lastLocation(DeviceId(meta.authenticatedDeviceId.value)).map(_.asView)
     )
 
   private val getDeviceRoute: HttpRoutes[H] =
-    endpoints.getDeviceEndpoint.toRoutes(meta => deviceService.getDevice(DeviceId(meta.authenticatedDeviceId.value)))
+    endpoints.getDeviceEndpoint.toRoutes(meta =>
+      deviceService.getDevice(DeviceId(meta.authenticatedDeviceId.value)).map(_.asView)
+    )
 
   private val createDeviceRoute: HttpRoutes[H] =
     endpoints.createDeviceEndpoint.toRoutes(meta =>
-      deviceService.register(DeviceId(meta.authenticatedDeviceId.value), meta.command)
+      deviceService.register(DeviceId(meta.authenticatedDeviceId.value), meta.command).map(_.transformInto[DeviceView])
     )
 
   private val createGroupRoute: HttpRoutes[H] =
     endpoints.createGroupEndpoint.toRoutes(meta =>
-      groupService.createGroup(DeviceId(meta.authenticatedDeviceId.value), meta.command)
+      groupService.createGroup(DeviceId(meta.authenticatedDeviceId.value), meta.command).map(_.transformInto[GroupView])
     )
 
   private val getAllDeviceGroupRoute: HttpRoutes[H] =
     endpoints.getAllDeviceGroupEndpoint.toRoutes(meta =>
-      groupService.getAllDeviceOwnedOrJoinedGroups(DeviceId(meta.authenticatedDeviceId.value))
+      groupService
+        .getAllDeviceOwnedOrJoinedGroups(DeviceId(meta.authenticatedDeviceId.value))
+        .map(_.map(_.transformInto[GroupView]))
     )
 
   private val joinGroupRoute: HttpRoutes[H] =

@@ -16,8 +16,8 @@ object Library {
     val kindProjector = "0.13.2"
     val newtype       = "0.4.4"
     val odin          = "0.13.0"
-    val pureConfig    = "0.17.2"
-    val tapir         = "1.0.1"
+    val pureConfig    = "0.17.5"
+    val tapir         = "1.9.9"
   }
 
   object orgs {
@@ -58,7 +58,8 @@ object Library {
     val openapiDocs       = s"${orgs.sttp}.tapir"   %% "tapir-openapi-docs"  % versions.tapir
     val swaggerUI         = s"${orgs.sttp}.tapir"   %% "tapir-swagger-ui"    % versions.tapir
     val http4sBlazeServer = orgs.http4s             %% "http4s-blaze-server" % versions.blaze
-    val openApiCirce      = s"${orgs.sttp}.apispec" %% "openapi-circe-yaml"  % "0.2.1"
+    val http4sDsl         = orgs.http4s             %% "http4s-dsl"          % versions.blaze
+    val openApiCirce      = s"${orgs.sttp}.apispec" %% "openapi-circe-yaml"  % "0.7.4"
   }
 
   object Logging {
@@ -129,6 +130,7 @@ object Library {
     Http.core,
     Http.enumeratum,
     Http.http4sBlazeServer,
+    Http.http4sDsl,
     Http.http4sServer,
     Http.jsonCirce,
     Http.openapiDocs,

@@ -24,11 +24,10 @@ import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.NotFoundError
 import org.tomohavvk.walker.protocol.errors.UniqueConstraintError
 import org.tomohavvk.walker.protocol.errors.ViolatesForeignKeyError
-import org.tomohavvk.walker.protocol.views.GroupView
 
 trait GroupService[F[_]] {
-  def createGroup(deviceId:                     DeviceId, command: CreateGroupCommand): F[GroupView]
-  def getAllDeviceOwnedOrJoinedGroups(deviceId: DeviceId): F[List[GroupView]]
+  def createGroup(deviceId:                     DeviceId, command: CreateGroupCommand): F[GroupEntity]
+  def getAllDeviceOwnedOrJoinedGroups(deviceId: DeviceId): F[List[GroupEntity]]
 }
 
 class GroupServiceImpl[F[_]: Monad, D[_]: Sync](
@@ -39,10 +38,10 @@ class GroupServiceImpl[F[_]: Monad, D[_]: Sync](
   HD:          Handle[D, AppError])
     extends GroupService[F] {
 
-  override def createGroup(deviceId: DeviceId, command: CreateGroupCommand): F[GroupView] =
+  override def createGroup(deviceId: DeviceId, command: CreateGroupCommand): F[GroupEntity] =
     loggerF.debug("Create group request") >>
       transactor
-        .withTxn(makeEntity(deviceId, command).flatMap(groupRepo.upsert).map(_.transformInto[GroupView]))
+        .withTxn(makeEntity(deviceId, command).flatMap(groupRepo.upsert))
         .handleWith[AppError] {
           case error: UniqueConstraintError => HF.raise(error.copy(message = "Group with same name already exists"))
           case _: ViolatesForeignKeyError   => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
@@ -50,11 +49,11 @@ class GroupServiceImpl[F[_]: Monad, D[_]: Sync](
         }
         .flatTap(_ => loggerF.debug("Create group success"))
 
-  override def getAllDeviceOwnedOrJoinedGroups(deviceId: DeviceId): F[List[GroupView]] =
+  override def getAllDeviceOwnedOrJoinedGroups(deviceId: DeviceId): F[List[GroupEntity]] =
     loggerF.debug("Get all device owned or joined groups request") >>
       transactor
         .withTxn(groupRepo.findAllByDeviceId(deviceId))
-        .map(_.map(_.transformInto[GroupView]))
+        .map(_.map(_.transformInto[GroupEntity]))
         .flatTap(_ => loggerF.debug("Get all device owned or joined groups success"))
 
   private def makeEntity(deviceId: DeviceId, command: CreateGroupCommand): D[GroupEntity] =

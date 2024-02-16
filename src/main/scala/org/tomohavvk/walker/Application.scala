@@ -29,9 +29,9 @@ class Application[F[_]: Async, D[_]: Sync, H[_]: Async: Console](
   LiftHF:               H ~> F) {
 
   import environment.configs
-  import environment.loggerF
   import environment.loggerD
   private implicit val loggerH = environment.loggerH
+  private implicit val loggerF = environment.loggerF
 
   def run(): F[ExitCode] =
     ResourceModule.make[F](configs).use { implicit resources =>
@@ -39,8 +39,8 @@ class Application[F[_]: Async, D[_]: Sync, H[_]: Async: Console](
         _ <- loggerF.info(s"Starting ${BuildInfo.name} ${BuildInfo.version}...")
         repositories = RepositoryModule.make[D]()
         services     = ServiceModule.make(repositories, transactor, loggerF, loggerD)
-        server       = HttpModule.make[F, H](services, environment.codecs, configs.server)
-        stream       = StreamModule.make(services, resources, transactor, loggerF)
+        server <- HttpModule.make[F, H](services, environment.codecs, configs.server)
+        stream = StreamModule.make(services, resources, transactor, loggerF)
         _ <- PersistenceMigration.migrate(configs.database, loggerF)
         lifecycle = new Lifecycle[F, D, H](configs, loggerH, server, stream.deviceLocationEventStream)
         exitCode <- LiftHF(lifecycle.start)
