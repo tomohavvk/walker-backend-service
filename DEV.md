@@ -1,11 +1,13 @@
 ## start flow
 - minikube start
+- minikube addons enable ingress
+- minikube addons enable ingress-dns
 - kubectl apply -f ./charts/zookeeper-deployment.yaml
 - kubectl apply -f ./charts/kafka-deployment.yaml
 - kubectl apply -f ./charts/schema-registry-deployment.yaml
 - kubectl apply -f ./charts/walker-backend-service-deployment.yaml
 
-- kubectl apply -f ./charts/zookeeper-deployment.yaml && kubectl apply -f ./charts/kafka-deployment.yaml && kubectl apply -f ./charts/kafka-deployment.yaml && kubectl apply -f ./charts/schema-registry-deployment.yaml && kubectl apply -f ./charts/walker-backend-service-deployment.yaml
+- kubectl apply -f ./charts/zookeeper-deployment.yaml && kubectl apply -f ./charts/kafka-deployment.yaml && kubectl apply -f ./charts/kafka-deployment.yaml && kubectl apply -f ./charts/schema-registry-deployment.yaml && kubectl apply -f ./charts/walker-backend-service-deployment.yaml && kubectl apply -f  ./charts/ingress-deployment.yaml
 
 
 ## alternative way

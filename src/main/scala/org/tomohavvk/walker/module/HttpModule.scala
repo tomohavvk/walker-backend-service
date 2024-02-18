@@ -13,10 +13,12 @@ import io.odin.Logger
 import org.http4s.HttpRoutes
 import org.http4s.websocket.WebSocketFrame
 import org.tomohavvk.walker.config.ServerConfig
+import org.tomohavvk.walker.handlers.WalkerWSMessageHandlerImpl
 import org.tomohavvk.walker.http.endpoints.ErrorHandling
 import org.tomohavvk.walker.http.endpoints.WalkerEndpoints
 import org.tomohavvk.walker.http.routes.api.WalkerApi
 import org.tomohavvk.walker.http.routes.api.WalkerWSApi
+import org.tomohavvk.walker.http.routes.api.WalkerWSApi.WSSubscribers
 import org.tomohavvk.walker.http.routes.openapi.OpenApiRoutes
 import org.tomohavvk.walker.http.server.HttpServer
 import org.tomohavvk.walker.module.ServiceModule.ServicesDeps
@@ -41,6 +43,7 @@ object HttpModule {
   ): F[HttpServer[F, H]] = {
     implicit val option: Http4sServerOptions[H] = makeOptions[H](codecs)
     val walkerEndpoints                         = new WalkerEndpoints(codecs.errorCodecs, codecs)
+
     val walkerApi =
       new WalkerApi[F, H](walkerEndpoints,
                           services.deviceService,
@@ -49,13 +52,15 @@ object HttpModule {
                           services.locationService
       )
 
+    val wsMessageHandler = new WalkerWSMessageHandlerImpl[F](services.locationService)
+
+    val openApi = new OpenApiRoutes[H](walkerEndpoints)
+
+    val apiRoutes: HttpRoutes[H] = openApi.routes <+> walkerApi.routes
+
     LiftHF(Ref.of[H, Map[DeviceId, Topic[H, WebSocketFrame]]](Map.empty))
       .map { subscriptionRef =>
-        val walkerWsApi = new WalkerWSApi[F, H](services.deviceService, subscriptionRef, loggerF, loggerH)
-
-        val openApi = new OpenApiRoutes[H](walkerEndpoints)
-
-        val apiRoutes: HttpRoutes[H] = openApi.routes <+> walkerApi.routes
+        val walkerWsApi = new WalkerWSApi[F, H](services.deviceService, wsMessageHandler, WSSubscribers[H](subscriptionRef), loggerH)
 
         new HttpServer(config, apiRoutes, walkerWsApi)
       }

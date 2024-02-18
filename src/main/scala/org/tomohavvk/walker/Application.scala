@@ -38,9 +38,9 @@ class Application[F[_]: Async, D[_]: Sync, H[_]: Async: Console](
       for {
         _ <- loggerF.info(s"Starting ${BuildInfo.name} ${BuildInfo.version}...")
         repositories = RepositoryModule.make[D]()
-        services     = ServiceModule.make(repositories, transactor, loggerF, loggerD)
+        services     = ServiceModule.make(repositories, transactor, loggerF)
         server <- HttpModule.make[F, H](services, environment.codecs, configs.server)
-        stream = StreamModule.make(services, resources, transactor, loggerF)
+        stream = StreamModule.make[F, D](services, resources)
         _ <- PersistenceMigration.migrate(configs.database, loggerF)
         lifecycle = new Lifecycle[F, D, H](configs, loggerH, server, stream.deviceLocationEventStream)
         exitCode <- LiftHF(lifecycle.start)

@@ -1,9 +1,7 @@
 package org.tomohavvk.walker.module
 
 import cats.effect.kernel.Temporal
-import io.odin.Logger
 import org.tomohavvk.walker.module.ServiceModule.ServicesDeps
-import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.streams.DeviceLocationEventStream
 
 object StreamModule {
@@ -12,12 +10,10 @@ object StreamModule {
 
   def make[F[_]: Temporal, D[_]](
     services:   ServicesDeps[F],
-    resources:  ResourcesDeps[F],
-    transactor: Transactor[F, D],
-    loggerF:    Logger[F]
+    resources:  ResourcesDeps[F]
   ): StreamDeps[F, D] = {
     val deviceLocationEventStream =
-      new DeviceLocationEventStream[F, D](services.locationService, resources.deviceLocationEventConsumer, loggerF)
+      new DeviceLocationEventStream[F, D](services.locationService, resources.deviceLocationEventConsumer)
 
     StreamDeps(deviceLocationEventStream)
   }

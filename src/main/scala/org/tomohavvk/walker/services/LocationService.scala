@@ -31,8 +31,7 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
   deviceRepo:         DeviceRepository[D],
   deviceLocationRepo: DeviceLocationRepository[D],
   transactor:         Transactor[F, D],
-  loggerF:            Logger[F],
-  loggerD:            Logger[D]
+  loggerF:            Logger[F]
 )(implicit HF:        Handle[F, AppError])
     extends LocationService[F] {
 

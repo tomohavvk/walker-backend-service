@@ -4,7 +4,6 @@ import cats.effect.kernel.Clock
 import cats.effect.kernel.Temporal
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFunctorOps
-import io.odin.Logger
 import io.scalaland.chimney.dsl._
 import org.tomohavvk.walker.EventConsumer
 import org.tomohavvk.walker.protocol.Types.AltitudeAccuracy
@@ -22,10 +21,10 @@ import fs2.kafka._
 
 import scala.concurrent.duration.DurationInt
 
+// TODO Remove since unused after websocket implementation
 class DeviceLocationEventStream[F[_]: Temporal: Clock, D[_]](
   locationService: LocationService[F],
-  eventConsumer:   EventConsumer[F, Key, Event],
-  loggerF:         Logger[F]) {
+  eventConsumer:   EventConsumer[F, Key, Event]) {
   import eventConsumer._
 
   val stream: F[Unit] =
@@ -34,7 +33,6 @@ class DeviceLocationEventStream[F[_]: Temporal: Clock, D[_]](
         .evalMap { committable =>
           committable.record.value.event match {
             case event: DeviceLocationEvent =>
-//              loggerF.info(event.locations.toString()) >>
               locationService
                 .upsertBatch(event.deviceId, makeEntities(event))
                 .as(committable.offset)

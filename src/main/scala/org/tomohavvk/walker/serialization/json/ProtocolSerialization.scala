@@ -9,6 +9,7 @@ import io.circe.Codec
 import io.circe.Decoder
 import io.circe.Encoder
 import io.circe.Json
+import org.tomohavvk.walker.protocol.DeviceLocation
 import org.tomohavvk.walker.protocol.Types._
 import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.InternalError
@@ -20,6 +21,7 @@ import org.tomohavvk.walker.protocol.views.DeviceLocationView
 import org.tomohavvk.walker.protocol.views.DeviceView
 import org.tomohavvk.walker.protocol.views.GroupView
 import org.tomohavvk.walker.protocol.views.ProbeView
+import org.tomohavvk.walker.protocol.ws.{Acknowledge, MessageInType, MessageOutType, PersistDeviceLocation, WSMessageIn, WSMessageOut}
 
 trait ProtocolSerialization extends CirceConfig {
 
@@ -70,5 +72,39 @@ trait ProtocolSerialization extends CirceConfig {
         hint <- c.downField("hint").as[Option[String]]
       } yield InternalError(s"Error occur with msg: $msg and hint: $hint")
 
+  // -- WS
+  implicit val codecDeviceLocation: Codec[DeviceLocation] =
+    deriveConfiguredCodec[DeviceLocation]
+
+  implicit val codecPersistDeviceLocationMessage: Codec[PersistDeviceLocation] =
+    deriveConfiguredCodec[PersistDeviceLocation]
+  implicit val codecAcknowledge: Codec[Acknowledge] = deriveConfiguredCodec[Acknowledge]
+
+  implicit val encoderWSMessageIn: Encoder[WSMessageIn] = Encoder.instance[WSMessageIn] { message =>
+    val baseJson = message match {
+      case message: PersistDeviceLocation => codecPersistDeviceLocationMessage(message)
+    }
+
+    baseJson.mapObject(_.add("type", message.`type`.asJson))
+  }
+
+  implicit val decoderWSMessageIn: Decoder[WSMessageIn] = cursor =>
+    cursor.downField("type").as[MessageInType].flatMap {
+      case MessageInType.PersistDeviceLocation => codecPersistDeviceLocationMessage(cursor)
+    }
+
+  implicit val encoderWSMessageOut: Encoder[WSMessageOut] = Encoder.instance[WSMessageOut] { message =>
+    val baseJson = message match {
+      case message: Acknowledge => codecAcknowledge(message)
+    }
+
+    baseJson.mapObject(_.add("type", message.`type`.asJson))
+  }
+
+  implicit val decoderWSMessageOut: Decoder[WSMessageOut] = cursor =>
+    cursor.downField("type").as[MessageOutType].flatMap {
+      case MessageOutType.Acknowledge => codecAcknowledge(cursor)
+    }
 }
+
 object ProtocolSerialization extends ProtocolSerialization

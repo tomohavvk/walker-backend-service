@@ -34,8 +34,7 @@ class GroupServiceImpl[F[_]: Monad, D[_]: Sync](
   groupRepo:   GroupRepository[D],
   transactor:  Transactor[F, D],
   loggerF:     Logger[F]
-)(implicit HF: Handle[F, AppError],
-  HD:          Handle[D, AppError])
+)(implicit HF: Handle[F, AppError])
     extends GroupService[F] {
 
   override def createGroup(deviceId: DeviceId, command: CreateGroupCommand): F[GroupEntity] =
@@ -53,7 +52,6 @@ class GroupServiceImpl[F[_]: Monad, D[_]: Sync](
     loggerF.debug("Get all device owned or joined groups request") >>
       transactor
         .withTxn(groupRepo.findAllByDeviceId(deviceId))
-        .map(_.map(_.transformInto[GroupEntity]))
         .flatTap(_ => loggerF.debug("Get all device owned or joined groups success"))
 
   private def makeEntity(deviceId: DeviceId, command: CreateGroupCommand): D[GroupEntity] =

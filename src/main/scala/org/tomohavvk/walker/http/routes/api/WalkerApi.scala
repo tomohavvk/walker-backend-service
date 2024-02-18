@@ -27,7 +27,6 @@ import org.tomohavvk.walker.utils.UnliftF
 import sttp.model.StatusCode.Ok
 import sttp.tapir.server.http4s.Http4sServerOptions
 
-// VIEW transformation for all entities should be here. Remove from service layer
 class WalkerApi[F[_]: Functor: Applicative, H[_]: Async](
   endpoints:              WalkerEndpoints,
   deviceService:          DeviceService[F],

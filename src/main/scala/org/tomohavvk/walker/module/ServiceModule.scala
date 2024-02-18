@@ -26,16 +26,14 @@ object ServiceModule {
   def make[F[_]: Sync, D[_]: Sync](
     repositoriesDeps: RepositoriesDeps[D],
     transactor:       Transactor[F, D],
-    loggerF:          Logger[F],
-    loggerD:          Logger[D]
+    loggerF:          Logger[F]
   )(implicit HF:      Handle[F, AppError],
     HD:               Handle[D, AppError]
   ): ServicesDeps[F] = {
     val locationService = new LocationServiceImpl[F, D](repositoriesDeps.deviceRepository,
                                                         repositoriesDeps.deviceLocationRepository,
                                                         transactor,
-                                                        loggerF,
-                                                        loggerD
+                                                        loggerF
     )
     val deviceService = new DeviceServiceImpl[F, D](repositoriesDeps.deviceRepository, transactor, loggerF)
     val groupService  = new GroupServiceImpl[F, D](repositoriesDeps.groupRepository, transactor, loggerF)
