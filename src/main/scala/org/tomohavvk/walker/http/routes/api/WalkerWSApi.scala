@@ -13,7 +13,8 @@ import org.http4s.websocket.WebSocketFrame
 import org.http4s.HttpRoutes
 import org.http4s._
 import org.tomohavvk.walker.handlers.WalkerWSMessageHandler
-import org.tomohavvk.walker.http.routes.api.WalkerWSApi.{NoMessage, WSSubscribers}
+import org.tomohavvk.walker.http.routes.api.WalkerWSApi.NoMessage
+import org.tomohavvk.walker.http.routes.api.WalkerWSApi.WSSubscribers
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.entities.DeviceEntity
 import org.tomohavvk.walker.protocol.errors.AppError
@@ -26,13 +27,13 @@ import io.circe.parser.decode
 import org.tomohavvk.walker.protocol.ws.WSMessageIn
 
 class WalkerWSApi[F[_]: Monad, H[_]: Monad](
-  deviceService:   DeviceService[F],
-  messageHandler:  WalkerWSMessageHandler[F],
-  subscribers:     WSSubscribers[H],
-  loggerH:         Logger[H]
+  deviceService:  DeviceService[F],
+  messageHandler: WalkerWSMessageHandler[F],
+  subscribers:    WSSubscribers[H],
+  loggerH:        Logger[H]
 )(implicit
-  C:  Concurrent[H],
-  U:  UnliftF[F, H, AppError])
+  C: Concurrent[H],
+  U: UnliftF[F, H, AppError])
     extends Http4sDsl[H]
     with ProtocolSerialization {
 
@@ -40,33 +41,33 @@ class WalkerWSApi[F[_]: Monad, H[_]: Monad](
     HttpRoutes.of[H] {
       case req @ GET -> Root / "api" / "v1" / "ws" / deviceId =>
         loggerH.debug(s"Handle WS handshake with device: $deviceId") >>
-        getDevice(deviceId).flatMap {
-          case Right(device) =>
-            Topic[H, WebSocketFrame].flatMap { topic =>
+          getDevice(deviceId).flatMap {
+            case Right(device) =>
+              Topic[H, WebSocketFrame].flatMap { topic =>
                 wsb.build(topic.subscribe(10), wsStream(device.id, topic, _, subscribers))
-            }
+              }
 
-          case Left(error) =>
-            Response[H](status = Status.NotFound, body = Stream(error.apiMessage.value).through(utf8.encode)).pure[H]
-        }
+            case Left(error) =>
+              Response[H](status = Status.NotFound, body = Stream(error.apiMessage.value).through(utf8.encode)).pure[H]
+          }
     }
 
   private def wsStream(
-    deviceId: DeviceId,
-    topic:    Topic[H, WebSocketFrame],
-    stream:   Stream[H, WebSocketFrame],
-    subscribers:     WSSubscribers[H]
+    deviceId:    DeviceId,
+    topic:       Topic[H, WebSocketFrame],
+    stream:      Stream[H, WebSocketFrame],
+    subscribers: WSSubscribers[H]
   ): Stream[H, Unit] =
     Stream.eval(addDevice(deviceId, topic, subscribers)) >>
-    stream
-      .evalMap[H, Option[String]] {
-        case WebSocketFrame.Text(message, _) => handleIncomingMessage(deviceId, message)
-        case WebSocketFrame.Close(_)         => handleCloseConnection(deviceId, subscribers)
-        case unknown                         => handleUnknownFrame(deviceId, unknown)
-      }
-      .collect { case Some(message) => message }
-      .map(text => WebSocketFrame.Text(text))
-      .through(topic.publish)
+      stream
+        .evalMap[H, Option[String]] {
+          case WebSocketFrame.Text(message, _) => handleIncomingMessage(deviceId, message)
+          case WebSocketFrame.Close(_)         => handleCloseConnection(deviceId, subscribers)
+          case unknown                         => handleUnknownFrame(deviceId, unknown)
+        }
+        .collect { case Some(message) => message }
+        .map(text => WebSocketFrame.Text(text))
+        .through(topic.publish)
 
   private def handleIncomingMessage(deviceId: DeviceId, message: String): H[Option[String]] =
     loggerH
@@ -87,7 +88,7 @@ class WalkerWSApi[F[_]: Monad, H[_]: Monad](
       })
 
   private def handleCloseConnection(
-    deviceId: DeviceId,
+    deviceId:    DeviceId,
     subscribers: WSSubscribers[H]
   ): H[Option[String]] =
     loggerH.debug(s"Handle connection close for device: ${deviceId.value}") >>
@@ -114,9 +115,9 @@ class WalkerWSApi[F[_]: Monad, H[_]: Monad](
     }
 
   private def addDevice(
-    deviceId: DeviceId,
-    topic:    Topic[H, WebSocketFrame],
-    subscribers:      WSSubscribers[H]
+    deviceId:    DeviceId,
+    topic:       Topic[H, WebSocketFrame],
+    subscribers: WSSubscribers[H]
   ): H[Unit] =
     subscribers.ref.tryUpdate(_ + (deviceId -> topic)).flatMap {
       case true =>
@@ -127,7 +128,7 @@ class WalkerWSApi[F[_]: Monad, H[_]: Monad](
         loggerH.error(s"Can't remove topic from subscription ref. Investigation needed")
     }
 
-  private def removeDevice(deviceId: DeviceId, subscribers:      WSSubscribers[H]): H[Unit] =
+  private def removeDevice(deviceId: DeviceId, subscribers: WSSubscribers[H]): H[Unit] =
     subscribers.ref.tryUpdate(_ - deviceId).flatMap {
       case true =>
         loggerH.debug(
