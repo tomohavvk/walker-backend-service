@@ -14,6 +14,8 @@ import org.tomohavvk.walker.protocol.views.DeviceGroupView
 import org.tomohavvk.walker.protocol.views.GroupView
 import org.tomohavvk.walker.protocol.ws.GroupJoin
 import org.tomohavvk.walker.protocol.ws.GroupJoined
+import org.tomohavvk.walker.protocol.ws.GroupsGet
+import org.tomohavvk.walker.protocol.ws.GroupsGot
 import org.tomohavvk.walker.protocol.ws.GroupsSearch
 import org.tomohavvk.walker.protocol.ws.GroupsSearched
 import org.tomohavvk.walker.protocol.ws.LocationPersist
@@ -51,6 +53,12 @@ class WalkerWSMessageHandlerImpl[F[_]: Functor](
           .joinGroup(deviceId, groupId)
           .map(_.transformInto[DeviceGroupView])
           .map(GroupJoined)
+
+      case GroupsGet(limit, offset) =>
+        groupService
+          .getAllDeviceOwnedOrJoinedGroups(deviceId, limit, offset)
+          .map(_.map(_.transformInto[GroupView]))
+          .map(GroupsGot)
 
       case GroupsSearch(search, limit, offset) =>
         groupService

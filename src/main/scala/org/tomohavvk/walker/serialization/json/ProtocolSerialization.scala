@@ -23,12 +23,13 @@ import org.tomohavvk.walker.protocol.views.GroupView
 import org.tomohavvk.walker.protocol.views.ProbeView
 import org.tomohavvk.walker.protocol.ws.GroupJoin
 import org.tomohavvk.walker.protocol.ws.GroupJoined
+import org.tomohavvk.walker.protocol.ws.GroupsGet
+import org.tomohavvk.walker.protocol.ws.GroupsGot
 import org.tomohavvk.walker.protocol.ws.GroupsSearch
 import org.tomohavvk.walker.protocol.ws.GroupsSearched
 import org.tomohavvk.walker.protocol.ws.LocationPersist
 import org.tomohavvk.walker.protocol.ws.LocationPersisted
 import org.tomohavvk.walker.protocol.ws.MessageInType
-import org.tomohavvk.walker.protocol.ws.MessageOutType
 import org.tomohavvk.walker.protocol.ws.WSMessageIn
 import org.tomohavvk.walker.protocol.ws.WSMessageOut
 
@@ -91,45 +92,51 @@ trait ProtocolSerialization extends CirceConfig {
   implicit val codecLocationPersist: Codec[LocationPersist] =
     deriveConfiguredCodec[LocationPersist]
   implicit val codecGroupJoin: Codec[GroupJoin]       = deriveConfiguredCodec[GroupJoin]
+  implicit val codecGroupsGet: Codec[GroupsGet]       = deriveConfiguredCodec[GroupsGet]
   implicit val codecGroupsSearch: Codec[GroupsSearch] = deriveConfiguredCodec[GroupsSearch]
-
-  implicit val encoderWSMessageIn: Encoder[WSMessageIn] = Encoder.instance[WSMessageIn] { message =>
-    val baseJson = message match {
-      case message: LocationPersist => codecLocationPersist(message)
-      case message: GroupJoin       => codecGroupJoin(message)
-      case message: GroupsSearch    => codecGroupsSearch(message)
-    }
-
-    baseJson.mapObject(_.add("type", message.`type`.asJson))
-  }
+//
+//  implicit val encoderWSMessageIn: Encoder[WSMessageIn] = Encoder.instance[WSMessageIn] { message =>
+//    val baseJson = message match {
+//      case message: LocationPersist => codecLocationPersist(message)
+//      case message: GroupJoin       => codecGroupJoin(message)
+//      case message: GroupsGet    => codecGroupsGet(message)
+//      case message: GroupsSearch    => codecGroupsSearch(message)
+//    }
+//
+//    baseJson.mapObject(_.add("type", message.`type`.asJson))
+//  }
 
   implicit val decoderWSMessageIn: Decoder[WSMessageIn] = cursor =>
     cursor.downField("type").as[MessageInType].flatMap {
       case MessageInType.LocationPersist => codecLocationPersist(cursor)
       case MessageInType.GroupJoin       => codecGroupJoin(cursor)
+      case MessageInType.GroupsGet       => codecGroupsGet(cursor)
       case MessageInType.GroupsSearch    => codecGroupsSearch(cursor)
     }
 
   implicit val codecLocationPersisted: Codec[LocationPersisted] = deriveConfiguredCodec[LocationPersisted]
   implicit val codecGroupJoined: Codec[GroupJoined]             = deriveConfiguredCodec[GroupJoined]
+  implicit val codecGroupsGot: Codec[GroupsGot]                 = deriveConfiguredCodec[GroupsGot]
   implicit val codecGroupsSearched: Codec[GroupsSearched]       = deriveConfiguredCodec[GroupsSearched]
 
   implicit val encoderWSMessageOut: Encoder[WSMessageOut] = Encoder.instance[WSMessageOut] { message =>
     val baseJson = message match {
       case message: LocationPersisted => codecLocationPersisted(message)
       case message: GroupJoined       => codecGroupJoined(message)
+      case message: GroupsGot         => codecGroupsGot(message)
       case message: GroupsSearched    => codecGroupsSearched(message)
     }
 
     baseJson.mapObject(_.add("type", message.`type`.asJson))
   }
-
-  implicit val decoderWSMessageOut: Decoder[WSMessageOut] = cursor =>
-    cursor.downField("type").as[MessageOutType].flatMap {
-      case MessageOutType.LocationPersisted => codecLocationPersisted(cursor)
-      case MessageOutType.GroupJoined       => codecGroupJoined(cursor)
-      case MessageOutType.GroupsSearched    => codecGroupsSearched(cursor)
-    }
+//
+//  implicit val decoderWSMessageOut: Decoder[WSMessageOut] = cursor =>
+//    cursor.downField("type").as[MessageOutType].flatMap {
+//      case MessageOutType.LocationPersisted => codecLocationPersisted(cursor)
+//      case MessageOutType.GroupJoined       => codecGroupJoined(cursor)
+//      case MessageOutType.GroupsGot    => codecGroupsSearched(cursor)
+//      case MessageOutType.GroupsSearched    => codecGroupsSearched(cursor)
+//    }
 }
 
 object ProtocolSerialization extends ProtocolSerialization

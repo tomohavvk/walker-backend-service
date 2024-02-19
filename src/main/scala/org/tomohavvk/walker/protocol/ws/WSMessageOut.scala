@@ -19,6 +19,7 @@ object MessageOutType extends StringEnum[MessageOutType] {
 
   case object GroupJoined extends MessageOutType("group_joined")
 
+  case object GroupsGot      extends MessageOutType("groups_got")
   case object GroupsSearched extends MessageOutType("groups_searched")
 
   override def values: IndexedSeq[MessageOutType] = findValues
@@ -30,6 +31,10 @@ case class LocationPersisted() extends WSMessageOut {
 
 case class GroupJoined(deviceGroup: DeviceGroupView) extends WSMessageOut {
   override val `type`: MessageOutType = MessageOutType.GroupJoined
+}
+
+case class GroupsGot(groups: List[GroupView]) extends WSMessageOut {
+  override val `type`: MessageOutType = MessageOutType.GroupsGot
 }
 
 case class GroupsSearched(groups: List[GroupView]) extends WSMessageOut {

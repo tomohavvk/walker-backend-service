@@ -66,6 +66,7 @@ class WalkerWSApi[F[_]: Monad, H[_]: Monad](
           case unknown                         => handleUnknownFrame(deviceId, unknown)
         }
         .collect { case Some(message) => message }
+        .evalTap(x => println(x).pure[H])
         .map(text => WebSocketFrame.Text(text))
         .through(topic.publish)
 
@@ -75,11 +76,14 @@ class WalkerWSApi[F[_]: Monad, H[_]: Monad](
       (message match {
         case "ping" => Option("pong").pure[H]
         case _ =>
+          println(message.asJson.noSpaces)
           decode[WSMessageIn](message) match {
             case Right(message) =>
               U.unlift(messageHandler.handle(deviceId, message)).flatMap {
                 case Right(value) => value.asJson.toString().some.pure[H]
-                case Left(error)  => error.asJson.toString().some.pure[H]
+                case Left(error) =>
+                  loggerH.error(error.logMessage.value) >>
+                    error.asJson.toString().some.pure[H]
               }
 
             case Left(error) =>

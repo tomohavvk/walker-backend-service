@@ -76,7 +76,13 @@ trait GroupQueries extends DoobieMeta {
         offset $offset"""
       .query[GroupEntity]
 
-  def searchGroupsQuery(deviceId: DeviceId, search: Search, limit: Limit, offset: Offset): doobie.Query0[GroupEntity] =
+  def searchGroupsQuery(
+    deviceId: DeviceId,
+    search:   Search,
+    limit:    Limit,
+    offset:   Offset
+  ): doobie.Query0[GroupEntity] = {
+    val like = s"$search%"
     fr"""select
           groups.id,
           groups.owner_device_id,
@@ -93,10 +99,11 @@ trait GroupQueries extends DoobieMeta {
           ((groups.owner_device_id = $deviceId
             or devices_groups.device_id = $deviceId)
           or groups.is_private = false)
-          and name ilike '$search%'
+          and name ilike $like
           limit $limit
           offset $offset"""
       .query[GroupEntity]
+  }
 
   def incrementDeviceCountQuery(groupId: GroupId, updatedAt: UpdatedAt): doobie.Update0 =
     fr"""UPDATE groups SET device_count = device_count + 1, updated_at = $updatedAt WHERE id = $groupId""".update

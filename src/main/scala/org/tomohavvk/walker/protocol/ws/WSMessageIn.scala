@@ -21,6 +21,7 @@ object MessageInType extends StringEnum[MessageInType] {
 
   case object GroupJoin extends MessageInType("group_join")
 
+  case object GroupsGet    extends MessageInType("groups_get")
   case object GroupsSearch extends MessageInType("groups_search")
 
   override def values: IndexedSeq[MessageInType] = findValues
@@ -32,6 +33,10 @@ case class LocationPersist(locations: List[DeviceLocation]) extends WSMessageIn 
 
 case class GroupJoin(groupId: GroupId) extends WSMessageIn {
   override val `type`: MessageInType = MessageInType.GroupJoin
+}
+
+case class GroupsGet(limit: Limit, offset: Offset) extends WSMessageIn {
+  override val `type`: MessageInType = MessageInType.GroupsGet
 }
 
 case class GroupsSearch(search: Search, limit: Limit, offset: Offset) extends WSMessageIn {
