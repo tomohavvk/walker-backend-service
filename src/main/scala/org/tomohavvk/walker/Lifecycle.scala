@@ -40,16 +40,14 @@ class Lifecycle[F[_]: Async, D[_], H[_]: Async: Console](
     logger.info(s"Server running in PROD. Send SIGTERM to stop it...") >>
       Async[H].never[Unit]
 
-  private val envLoop: AppConfig => H[Unit] = config => {
+  private val envLoop: AppConfig => H[Unit] = config =>
     config.env match {
       case Dev  => devLoop
       case Prod => prodLoop
     }
-  }
 
-  val start: H[ExitCode] = {
-    val streamAndHttp = Spawn[H].race(startHttpServer, startDeviceLocationStream)
-    Spawn[H].race(envLoop(configs.app), streamAndHttp).as(ExitCode.Success)
-  }
+  val start: H[ExitCode] =
+//    val streamAndHttp = Spawn[H].race(startHttpServer, startDeviceLocationStream)
+    Spawn[H].race(envLoop(configs.app), startHttpServer).as(ExitCode.Success)
 
 }

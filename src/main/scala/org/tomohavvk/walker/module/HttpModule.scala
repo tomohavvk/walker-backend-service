@@ -52,7 +52,8 @@ object HttpModule {
                           services.locationService
       )
 
-    val wsMessageHandler = new WalkerWSMessageHandlerImpl[F](services.locationService)
+    val wsMessageHandler =
+      new WalkerWSMessageHandlerImpl[F](services.locationService, services.groupService, services.devicesGroupService)
 
     val openApi = new OpenApiRoutes[H](walkerEndpoints)
 
@@ -60,7 +61,8 @@ object HttpModule {
 
     LiftHF(Ref.of[H, Map[DeviceId, Topic[H, WebSocketFrame]]](Map.empty))
       .map { subscriptionRef =>
-        val walkerWsApi = new WalkerWSApi[F, H](services.deviceService, wsMessageHandler, WSSubscribers[H](subscriptionRef), loggerH)
+        val walkerWsApi =
+          new WalkerWSApi[F, H](services.deviceService, wsMessageHandler, WSSubscribers[H](subscriptionRef), loggerH)
 
         new HttpServer(config, apiRoutes, walkerWsApi)
       }

@@ -24,6 +24,9 @@ object Types {
   @newtype case class IsPrivate(value: Boolean)
   @newtype case class CreatedAt(value: LocalDateTime)
   @newtype case class UpdatedAt(value: LocalDateTime)
+  @newtype case class Search(value: String)
+  @newtype case class Limit(value: Int)
+  @newtype case class Offset(value: Int)
 
   @newtype case class TraceId(value: String)
   @newtype case class XAuthDeviceId(value: String)

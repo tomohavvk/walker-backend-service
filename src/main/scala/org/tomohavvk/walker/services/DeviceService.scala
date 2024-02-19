@@ -28,12 +28,11 @@ class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
   deviceRepo:  DeviceRepository[D],
   transactor:  Transactor[F, D],
   loggerF:     Logger[F]
-)(implicit HF: Handle[F, AppError],
-  HD:          Handle[D, AppError])
+)(implicit HF: Handle[F, AppError])
     extends DeviceService[F] {
 
   override def getDevice(deviceId: DeviceId): F[DeviceEntity] =
-    loggerF.debug("Get device request") >>
+    loggerF.debug("Get device") >>
       transactor
         .withTxn(deviceRepo.findById(deviceId))
         .flatMap {
@@ -42,7 +41,7 @@ class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
         }
 
   override def register(deviceId: DeviceId, command: RegisterDeviceCommand): F[DeviceEntity] =
-    loggerF.debug("Register device request") >>
+    loggerF.debug("Register device") >>
       transactor
         .withTxn {
           TimeGen[D].genTimeUtc.flatMap { createdAt =>

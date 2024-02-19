@@ -15,7 +15,10 @@ import org.tomohavvk.walker.BuildInfo.version
 import org.tomohavvk.walker.http.endpoints.WalkerEndpoints
 import org.tomohavvk.walker.http.routes.MappedHttp4sHttpEndpoint
 import org.tomohavvk.walker.protocol.Types.DeviceId
+import org.tomohavvk.walker.protocol.Types.Limit
+import org.tomohavvk.walker.protocol.Types.Offset
 import org.tomohavvk.walker.protocol.errors.AppError
+import org.tomohavvk.walker.protocol.views.DeviceGroupView
 import org.tomohavvk.walker.protocol.views.DeviceView
 import org.tomohavvk.walker.protocol.views.GroupView
 import org.tomohavvk.walker.protocol.views.ProbeView
@@ -60,19 +63,23 @@ class WalkerApi[F[_]: Functor: Applicative, H[_]: Async](
 
   private val createGroupRoute: HttpRoutes[H] =
     endpoints.createGroupEndpoint.toRoutes(meta =>
-      groupService.createGroup(DeviceId(meta.authenticatedDeviceId.value), meta.command).map(_.transformInto[GroupView])
+      groupService
+        .createGroup(DeviceId(meta.authenticatedDeviceId.value), meta.command.name, meta.command.isPrivate)
+        .map(_.transformInto[GroupView])
     )
 
   private val getAllDeviceGroupRoute: HttpRoutes[H] =
     endpoints.getAllDeviceGroupEndpoint.toRoutes(meta =>
       groupService
-        .getAllDeviceOwnedOrJoinedGroups(DeviceId(meta.authenticatedDeviceId.value))
+        .getAllDeviceOwnedOrJoinedGroups(DeviceId(meta.authenticatedDeviceId.value), Limit(1000), Offset(0)) // FIXME
         .map(_.map(_.transformInto[GroupView]))
     )
 
   private val joinGroupRoute: HttpRoutes[H] =
     endpoints.joinGroupEndpoint.toRoutes(meta =>
-      devicesGroupService.joinGroup(DeviceId(meta.authenticatedDeviceId.value), meta.groupId)
+      devicesGroupService
+        .joinGroup(DeviceId(meta.authenticatedDeviceId.value), meta.groupId)
+        .map(_.transformInto[DeviceGroupView])
     )
 
   private val probeView: ProbeView = ProbeView(name, "walker backend service", version, scalaVersion, sbtVersion)

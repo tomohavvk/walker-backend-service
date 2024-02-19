@@ -36,7 +36,7 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
     extends LocationService[F] {
 
   override def lastLocation(deviceId: DeviceId): F[DeviceLocationEntity] =
-    loggerF.debug("Device last location request") >>
+    loggerF.debug("Device last location") >>
       transactor
         .withTxn(deviceLocationRepo.findLastById(deviceId))
         .flatMap {

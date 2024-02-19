@@ -6,7 +6,7 @@ val root = project
   .settings(
     Seq(
       name := "walker-backend-service",
-      version := "0.0.4",
+      version := "0.0.5",
       organization := "org.tomohavvk",
       scalaVersion := "2.12.10",
       scalacOptions := scalacOptionsConfig

@@ -9,7 +9,6 @@ import cats.implicits.toFunctorOps
 import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
 import io.odin.Logger
-import io.scalaland.chimney.dsl._
 import org.tomohavvk.walker.generation.TimeGen
 import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.persistence.repository.DeviceGroupRepository
@@ -24,24 +23,22 @@ import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.BadRequestError
 import org.tomohavvk.walker.protocol.errors.NotFoundError
 import org.tomohavvk.walker.protocol.errors.UniqueConstraintError
-import org.tomohavvk.walker.protocol.views.DeviceGroupView
 
 trait DevicesGroupService[F[_]] {
-  def joinGroup(deviceId: DeviceId, groupId: GroupId): F[DeviceGroupView]
+  def joinGroup(deviceId: DeviceId, groupId: GroupId): F[DeviceGroupEntity]
 }
 
 class DeviceGroupServiceImpl[F[_]: Monad, D[_]: Sync](
   groupRepo:       GroupRepository[D],
   deviceGroupRepo: DeviceGroupRepository[D],
-  deviceService:   DeviceService[F],
   transactor:      Transactor[F, D],
   loggerF:         Logger[F]
 )(implicit HF:     Handle[F, AppError],
   HD:              Handle[D, AppError])
     extends DevicesGroupService[F] {
 
-  override def joinGroup(deviceId: DeviceId, groupId: GroupId): F[DeviceGroupView] =
-    loggerF.debug("Join group request") >>
+  override def joinGroup(deviceId: DeviceId, groupId: GroupId): F[DeviceGroupEntity] =
+    loggerF.debug("Join group") >>
       transactor
         .withTxn {
           groupRepo
@@ -49,7 +46,7 @@ class DeviceGroupServiceImpl[F[_]: Monad, D[_]: Sync](
             .flatMap(validate(deviceId, groupId, _))
             .flatMap(joinDeviceToGroup(deviceId, _))
             .flatTap(incrementCountDeviceInGroup)
-            .map(_.transformInto[DeviceGroupView])
+
         }
         .handleWith[AppError] {
           case _: UniqueConstraintError => HF.raise(BadRequestError("Already joined to the group"))

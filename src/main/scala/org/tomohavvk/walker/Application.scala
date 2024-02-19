@@ -29,7 +29,6 @@ class Application[F[_]: Async, D[_]: Sync, H[_]: Async: Console](
   LiftHF:               H ~> F) {
 
   import environment.configs
-  import environment.loggerD
   private implicit val loggerH = environment.loggerH
   private implicit val loggerF = environment.loggerF
 

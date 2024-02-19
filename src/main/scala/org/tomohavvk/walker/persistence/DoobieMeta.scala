@@ -27,6 +27,9 @@ trait DoobieMeta extends Instances with JavaTimeInstances with ProtocolSerializa
   implicit lazy val metaUnixTime: Meta[UnixTime]                 = UnixTime.deriving
   implicit lazy val metaBearing: Meta[Bearing]                   = Bearing.deriving
   implicit lazy val metaAltitudeAccuracy: Meta[AltitudeAccuracy] = AltitudeAccuracy.deriving
+  implicit lazy val metaSearch: Meta[Search]                     = Search.deriving
+  implicit lazy val metaLimit: Meta[Limit]                       = Limit.deriving
+  implicit lazy val metaOffset: Meta[Offset]                     = Offset.deriving
 
   implicit lazy val jsonMeta: Meta[Json] =
     Meta.Advanced

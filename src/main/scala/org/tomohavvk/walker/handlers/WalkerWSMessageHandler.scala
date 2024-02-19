@@ -10,7 +10,18 @@ import org.tomohavvk.walker.protocol.Types.Bearing
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.entities.DeviceLocationEntity
 import org.tomohavvk.walker.protocol.errors.AppError
-import org.tomohavvk.walker.protocol.ws.{Acknowledge, PersistDeviceLocation, WSMessageIn, WSMessageOut}
+import org.tomohavvk.walker.protocol.views.DeviceGroupView
+import org.tomohavvk.walker.protocol.views.GroupView
+import org.tomohavvk.walker.protocol.ws.GroupJoin
+import org.tomohavvk.walker.protocol.ws.GroupJoined
+import org.tomohavvk.walker.protocol.ws.GroupsSearch
+import org.tomohavvk.walker.protocol.ws.GroupsSearched
+import org.tomohavvk.walker.protocol.ws.LocationPersist
+import org.tomohavvk.walker.protocol.ws.LocationPersisted
+import org.tomohavvk.walker.protocol.ws.WSMessageIn
+import org.tomohavvk.walker.protocol.ws.WSMessageOut
+import org.tomohavvk.walker.services.DevicesGroupService
+import org.tomohavvk.walker.services.GroupService
 import org.tomohavvk.walker.services.LocationService
 
 import java.time.Instant
@@ -22,16 +33,30 @@ trait WalkerWSMessageHandler[F[_]] {
 }
 
 class WalkerWSMessageHandlerImpl[F[_]: Functor](
-  locationService: LocationService[F]
-)(implicit HF:     Handle[F, AppError])
+  locationService:    LocationService[F],
+  groupService:       GroupService[F],
+  deviceGroupService: DevicesGroupService[F]
+)(implicit HF:        Handle[F, AppError])
     extends WalkerWSMessageHandler[F] {
 
   override def handle(deviceId: DeviceId, message: WSMessageIn): F[WSMessageOut] =
     message match {
-      case PersistDeviceLocation(locations) =>
+      case LocationPersist(locations) =>
         locationService
           .upsertBatch(deviceId, makeEntities(deviceId, locations))
-          .as(Acknowledge(true))
+          .as(LocationPersisted())
+
+      case GroupJoin(groupId) =>
+        deviceGroupService
+          .joinGroup(deviceId, groupId)
+          .map(_.transformInto[DeviceGroupView])
+          .map(GroupJoined)
+
+      case GroupsSearch(search, limit, offset) =>
+        groupService
+          .searchGroups(deviceId, search, limit, offset)
+          .map(_.map(_.transformInto[GroupView]))
+          .map(GroupsSearched)
     }
 
   private def makeEntities(deviceId: DeviceId, locations: List[DeviceLocation]): List[DeviceLocationEntity] =
