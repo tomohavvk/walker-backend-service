@@ -86,7 +86,8 @@ trait GroupQueries extends DoobieMeta {
     offset: Offset
   ): doobie.Query0[GroupEntity] = {
 
-    val like = if (search.value.length < 3) s"$search%" else s"%$search%"
+    val nameLike     = if (search.value.length < 3) s"$search%" else s"%$search%"
+    val publicIdLike = s"$search%"
 
     fr"""select
            groups.id,
@@ -102,7 +103,7 @@ trait GroupQueries extends DoobieMeta {
            groups
          where
            groups.is_public = true
-           and (name ilike $like or public_id ilike $like)
+           and (name ilike $nameLike or public_id ilike $publicIdLike)
          order by
                updated_at desc
          limit $limit offset $offset"""

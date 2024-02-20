@@ -45,12 +45,7 @@ object HttpModule {
     val walkerEndpoints                         = new WalkerEndpoints(codecs.errorCodecs, codecs)
 
     val walkerApi =
-      new WalkerApi[F, H](walkerEndpoints,
-                          services.deviceService,
-                          services.groupService,
-                          services.devicesGroupService,
-                          services.locationService
-      )
+      new WalkerApi[F, H](walkerEndpoints)
 
     val wsMessageHandler =
       new WalkerWSMessageHandlerImpl[F](services.locationService, services.groupService, services.devicesGroupService)
