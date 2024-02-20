@@ -28,7 +28,7 @@ trait EndpointSchemas {
   implicit val tapirDeviceName: Schema[DeviceName]                   = DeviceName.deriving
   implicit val tapirDeviceCount: Schema[DeviceCount]                 = DeviceCount.deriving
   implicit val tapirGroupName: Schema[GroupName]                     = GroupName.deriving
-  implicit val tapirIsPrivate: Schema[IsPrivate]                     = IsPrivate.deriving
+  implicit val tapirIsPublic: Schema[IsPublic]                       = IsPublic.deriving
   implicit val tapirCreatedAt: Schema[CreatedAt]                     = CreatedAt.deriving
   implicit val tapirUpdatedAt: Schema[UpdatedAt]                     = UpdatedAt.deriving
   implicit val tapirLatitudeSchema: Schema[Latitude]                 = Latitude.deriving
@@ -39,6 +39,8 @@ trait EndpointSchemas {
   implicit val tapirSpeedSchema: Schema[Speed]                       = Speed.deriving
   implicit val tapirBearingSchema: Schema[Bearing]                   = Bearing.deriving
   implicit val tapirAltitudeAccuracySchema: Schema[AltitudeAccuracy] = AltitudeAccuracy.deriving
+  implicit val tapirGroupPublicId: Schema[GroupPublicId]             = GroupPublicId.deriving
+  implicit val tapirDescription: Schema[Description]                 = Description.deriving
 }
 
 object EndpointSchemas extends EndpointSchemas

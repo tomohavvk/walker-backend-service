@@ -6,10 +6,12 @@ import org.tomohavvk.walker.protocol.views.GroupView
 
 case class GroupEntity(
   id:            GroupId,
+  publicId:      GroupPublicId,
   ownerDeviceId: DeviceId,
   name:          GroupName,
+  description:   Description,
   deviceCount:   DeviceCount,
-  isPrivate:     IsPrivate,
+  isPublic:      IsPublic,
   createdAt:     CreatedAt,
   updatedAt:     UpdatedAt)
 

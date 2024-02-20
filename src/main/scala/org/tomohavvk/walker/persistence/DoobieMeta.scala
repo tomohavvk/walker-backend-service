@@ -16,7 +16,7 @@ trait DoobieMeta extends Instances with JavaTimeInstances with ProtocolSerializa
   implicit lazy val metaDeviceName: Meta[DeviceName]             = DeviceName.deriving
   implicit lazy val metaDeviceCount: Meta[DeviceCount]           = DeviceCount.deriving
   implicit lazy val metaGroupName: Meta[GroupName]               = GroupName.deriving
-  implicit lazy val metaIsPrivate: Meta[IsPrivate]               = IsPrivate.deriving
+  implicit lazy val metaIsPublic: Meta[IsPublic]                 = IsPublic.deriving
   implicit lazy val metaCreatedAt: Meta[CreatedAt]               = CreatedAt.deriving
   implicit lazy val metaUpdatedAt: Meta[UpdatedAt]               = UpdatedAt.deriving
   implicit lazy val metaLatitude: Meta[Latitude]                 = Latitude.deriving
@@ -30,6 +30,8 @@ trait DoobieMeta extends Instances with JavaTimeInstances with ProtocolSerializa
   implicit lazy val metaSearch: Meta[Search]                     = Search.deriving
   implicit lazy val metaLimit: Meta[Limit]                       = Limit.deriving
   implicit lazy val metaOffset: Meta[Offset]                     = Offset.deriving
+  implicit lazy val metaGroupPublicId: Meta[GroupPublicId]       = GroupPublicId.deriving
+  implicit lazy val metaDescription: Meta[Description]           = Description.deriving
 
   implicit lazy val jsonMeta: Meta[Json] =
     Meta.Advanced

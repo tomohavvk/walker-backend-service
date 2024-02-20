@@ -6,7 +6,6 @@ import org.tomohavvk.walker.http.endpoints.bodies.LocationBodies
 import org.tomohavvk.walker.http.endpoints.bodies.ProbeBodies
 import org.tomohavvk.walker.http.endpoints.codecs.ErrorCodecs
 import org.tomohavvk.walker.http.endpoints.mappings.ErrorMappings
-import org.tomohavvk.walker.http.endpoints.metas.CreateGroupCommandMeta
 import org.tomohavvk.walker.http.endpoints.metas.EmptyBodyCommandMeta
 import org.tomohavvk.walker.http.endpoints.metas.JoinGroupCommandMeta
 import org.tomohavvk.walker.http.endpoints.metas.RegisterDeviceCommandMeta
@@ -87,24 +86,24 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
       .errorOut(oneOf(internalErrorStatusMapping, notFoundErrorStatusMapping, badRequestStatusMapping))
       .out(bodyForDeviceView)
       .out(statusCode(StatusCode.Ok))
-
-  val createGroupEndpoint =
-    apiV1Endpoint
-      .in(authDeviceIdHeader.and(bodyForCreateGroupCommand).mapTo[CreateGroupCommandMeta])
-      .in("groups")
-      .tag("groups")
-      .summary("Endpoint for create group")
-      .description("Endpoint for create group")
-      .post
-      .errorOut(
-        oneOf(internalErrorStatusMapping,
-              alreadyExistsErrorStatusMapping,
-              notFoundErrorStatusMapping,
-              badRequestStatusMapping
-        )
-      )
-      .out(bodyForGroupView)
-      .out(statusCode(StatusCode.Ok))
+//
+//  val createGroupEndpoint =
+//    apiV1Endpoint
+//      .in(authDeviceIdHeader.and(bodyForCreateGroupCommand).mapTo[CreateGroupCommandMeta])
+//      .in("groups")
+//      .tag("groups")
+//      .summary("Endpoint for create group")
+//      .description("Endpoint for create group")
+//      .post
+//      .errorOut(
+//        oneOf(internalErrorStatusMapping,
+//              alreadyExistsErrorStatusMapping,
+//              notFoundErrorStatusMapping,
+//              badRequestStatusMapping
+//        )
+//      )
+//      .out(bodyForGroupView)
+//      .out(statusCode(StatusCode.Ok))
 
   val joinGroupEndpoint =
     apiV1Endpoint
@@ -125,17 +124,17 @@ class WalkerEndpoints(val errorCodecs: ErrorCodecs, codecs: Codecs)
       .out(bodyForDeviceGroupView)
       .out(statusCode(StatusCode.Ok))
 
-  val getAllDeviceGroupEndpoint =
-    apiV1Endpoint
-      .in(authDeviceIdHeader.mapTo[EmptyBodyCommandMeta])
-      .in("groups")
-      .tag("groups")
-      .summary("Endpoint for get all device owner or joined groups")
-      .description("Endpoint for get all device owner or joined groups")
-      .get
-      .errorOut(oneOf(internalErrorStatusMapping, badRequestStatusMapping))
-      .out(bodyForListOfGroupView)
-      .out(statusCode(StatusCode.Ok))
+//  val getAllDeviceGroupEndpoint =
+//    apiV1Endpoint
+//      .in(authDeviceIdHeader.mapTo[EmptyBodyCommandMeta])
+//      .in("groups")
+//      .tag("groups")
+//      .summary("Endpoint for get all device owner or joined groups")
+//      .description("Endpoint for get all device owner or joined groups")
+//      .get
+//      .errorOut(oneOf(internalErrorStatusMapping, badRequestStatusMapping))
+//      .out(bodyForListOfGroupView)
+//      .out(statusCode(StatusCode.Ok))
 
   private def groupIdPath: EndpointInput.PathCapture[GroupId] =
     path[GroupId]

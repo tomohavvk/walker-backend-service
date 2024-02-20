@@ -4,9 +4,11 @@ import org.tomohavvk.walker.protocol.Types._
 
 case class GroupView(
   id:            GroupId,
+  publicId:      GroupPublicId,
   ownerDeviceId: DeviceId,
   name:          GroupName,
+  description:   Description,
   deviceCount:   DeviceCount,
-  isPrivate:     IsPrivate,
+  isPublic:      IsPublic,
   createdAt:     CreatedAt,
   updatedAt:     UpdatedAt)

@@ -58,7 +58,7 @@ class DeviceGroupServiceImpl[F[_]: Monad, D[_]: Sync](
     mbGroup match {
       case None                                           => HD.raise(NotFoundError(s"Group: ${groupId.value} not found"))
       case Some(group) if group.ownerDeviceId == deviceId => HD.raise(BadRequestError("Can't join your own group"))
-      case Some(group) if group.isPrivate.value           => HD.raise(BadRequestError("Group is private. Access denied"))
+      case Some(group) if group.isPublic.value            => HD.raise(BadRequestError("Group is private. Access denied"))
       case Some(group)                                    => group.pure[D]
     }
 

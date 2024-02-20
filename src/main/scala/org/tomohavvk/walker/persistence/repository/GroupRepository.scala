@@ -40,7 +40,7 @@ class DoobieGroupRepository[D[_]: Monad](implicit D: LiftConnectionIO[D, AppErro
     D.lift(findAllByDeviceIdQuery(deviceId, limit, offset).to[List])
 
   override def searchGroups(deviceId: DeviceId, search: Search, limit: Limit, offset: Offset): D[List[GroupEntity]] =
-    D.lift(searchGroupsQuery(deviceId, search, limit, offset).to[List])
+    D.lift(searchGroupsQuery(search, limit, offset).to[List])
 
   override def incrementDeviceCount(groupId: GroupId, updatedAt: UpdatedAt): D[Unit] =
     D.lift(incrementDeviceCountQuery(groupId, updatedAt).run.void)
@@ -50,58 +50,62 @@ trait GroupQueries extends DoobieMeta {
 
   def upsertQuery(entity: GroupEntity): doobie.Update0 = {
     import entity._
-    fr"""INSERT INTO groups (id, owner_device_id, name, device_count, is_private, created_at, updated_at)
-        VALUES ($id, $ownerDeviceId, $name, $deviceCount, $isPrivate, $createdAt, $updatedAt)""".update
+    fr"""INSERT INTO groups (id, public_id, owner_device_id, name, description, device_count, is_public, created_at, updated_at)
+        VALUES ($id, $publicId, $ownerDeviceId, $name, $description, $deviceCount, $isPublic, $createdAt, $updatedAt)""".update
   }
 
   def findByIdQuery(groupId: GroupId): doobie.Query0[GroupEntity] =
-    fr"""SELECT id, owner_device_id, name, device_count, is_private, created_at, updated_at FROM groups WHERE id = $groupId"""
+    fr"""SELECT id, owner_device_id, name, device_count, is_public, created_at, updated_at FROM groups WHERE id = $groupId"""
       .query[GroupEntity]
 
   def findAllByDeviceIdQuery(deviceId: DeviceId, limit: Limit, offset: Offset): doobie.Query0[GroupEntity] =
     fr"""select
-          groups.id,
-          groups.owner_device_id,
-          groups.name,
-          groups.device_count,
-          groups.is_private,
-          groups.created_at,
-          groups.updated_at
-        from
-          groups
-        left join devices_groups on
-          groups.id = devices_groups.group_id
-        where groups.owner_device_id = $deviceId or devices_groups.device_id = $deviceId
-        limit $limit
-        offset $offset"""
+           groups.id,
+           groups.public_id,
+           groups.owner_device_id,
+           groups.name,
+           groups.description,
+           groups.device_count,
+           groups.is_public,
+           groups.created_at,
+           groups.updated_at
+         from
+           groups
+         join devices_groups on
+           groups.id = devices_groups.group_id
+         where
+           devices_groups.device_id = $deviceId
+          order by
+                updated_at desc
+         limit $limit offset $offset"""
       .query[GroupEntity]
 
   def searchGroupsQuery(
-    deviceId: DeviceId,
-    search:   Search,
-    limit:    Limit,
-    offset:   Offset
+    search: Search,
+    limit:  Limit,
+    offset: Offset
   ): doobie.Query0[GroupEntity] = {
-    val like = s"$search%"
+
+    val like = if (search.value.length < 3) s"$search%" else s"%$search%"
+
     fr"""select
-          groups.id,
-          groups.owner_device_id,
-          groups.name,
-          groups.device_count,
-          groups.is_private,
-          groups.created_at,
-          groups.updated_at
-        from
-          groups
-        left join devices_groups on
-          groups.id = devices_groups.group_id
-        where
-          ((groups.owner_device_id = $deviceId
-            or devices_groups.device_id = $deviceId)
-          or groups.is_private = false)
-          and name ilike $like
-          limit $limit
-          offset $offset"""
+           groups.id,
+           groups.public_id,
+           groups.owner_device_id,
+           groups.name,
+           groups.description,
+           groups.device_count,
+           groups.is_public,
+           groups.created_at,
+           groups.updated_at
+         from
+           groups
+         where
+           groups.is_public = true
+           and (name ilike $like or public_id ilike $like)
+         order by
+               updated_at desc
+         limit $limit offset $offset"""
       .query[GroupEntity]
   }
 

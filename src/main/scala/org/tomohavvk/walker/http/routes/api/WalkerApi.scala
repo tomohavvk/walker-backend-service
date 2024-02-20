@@ -60,20 +60,20 @@ class WalkerApi[F[_]: Functor: Applicative, H[_]: Async](
     endpoints.createDeviceEndpoint.toRoutes(meta =>
       deviceService.register(DeviceId(meta.authenticatedDeviceId.value), meta.command).map(_.transformInto[DeviceView])
     )
-
-  private val createGroupRoute: HttpRoutes[H] =
-    endpoints.createGroupEndpoint.toRoutes(meta =>
-      groupService
-        .createGroup(DeviceId(meta.authenticatedDeviceId.value), meta.command.name, meta.command.isPrivate)
-        .map(_.transformInto[GroupView])
-    )
-
-  private val getAllDeviceGroupRoute: HttpRoutes[H] =
-    endpoints.getAllDeviceGroupEndpoint.toRoutes(meta =>
-      groupService
-        .getAllDeviceOwnedOrJoinedGroups(DeviceId(meta.authenticatedDeviceId.value), Limit(1000), Offset(0)) // FIXME
-        .map(_.map(_.transformInto[GroupView]))
-    )
+//
+//  private val createGroupRoute: HttpRoutes[H] =
+//    endpoints.createGroupEndpoint.toRoutes(meta =>
+//      groupService
+//        .createGroup(DeviceId(meta.authenticatedDeviceId.value), meta.command.name, meta.command.isPublic)
+//        .map(_.transformInto[GroupView])
+//    )
+//
+//  private val getAllDeviceGroupRoute: HttpRoutes[H] =
+//    endpoints.getAllDeviceGroupEndpoint.toRoutes(meta =>
+//      groupService
+//        .getAllDeviceOwnedOrJoinedGroups(DeviceId(meta.authenticatedDeviceId.value), Limit(1000), Offset(0)) // FIXME
+//        .map(_.map(_.transformInto[GroupView]))
+//    )
 
   private val joinGroupRoute: HttpRoutes[H] =
     endpoints.joinGroupEndpoint.toRoutes(meta =>
@@ -85,5 +85,5 @@ class WalkerApi[F[_]: Functor: Applicative, H[_]: Async](
   private val probeView: ProbeView = ProbeView(name, "walker backend service", version, scalaVersion, sbtVersion)
 
   val routes =
-    healthProbe <+> readyProbe <+> handleDeviceLocationRoute <+> getDeviceRoute <+> createDeviceRoute <+> createGroupRoute <+> joinGroupRoute <+> getAllDeviceGroupRoute
+    healthProbe <+> readyProbe <+> handleDeviceLocationRoute <+> getDeviceRoute <+> createDeviceRoute /*<+> createGroupRoute <+> joinGroupRoute <+> getAllDeviceGroupRoute */
 }
