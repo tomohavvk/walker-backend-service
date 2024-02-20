@@ -24,8 +24,6 @@ create table if not exists groups (
 create unique index if not exists groups_public_id_uniq_idx on groups(public_id);
 create  index if not exists groups_public_id_idx on groups USING gin(public_id gin_trgm_ops);
 create index if not exists groups_name_trgm_idx on groups USING gin(name gin_trgm_ops);
-create index if not exists groups_is_public_idx on groups(is_public);
-create index if not exists groups_owner_device_id_idx on groups(owner_device_id);
 create index if not exists groups_updated_at_idx on groups(updated_at desc);
 
 create table if not exists devices_groups (
