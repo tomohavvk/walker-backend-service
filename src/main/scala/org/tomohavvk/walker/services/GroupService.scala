@@ -47,7 +47,6 @@ class GroupServiceImpl[F[_]: Sync, D[_]: Monad](
             }
         }
         .handleWith[AppError] {
-//          case error: GroupPublicIdNotUniqueError => HF.raise(error)
           case _: ViolatesForeignKeyError => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
           case error                      => HF.raise(error)
         }

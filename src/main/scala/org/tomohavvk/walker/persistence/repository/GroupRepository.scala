@@ -40,7 +40,7 @@ class DoobieGroupRepository[D[_]: Monad](implicit D: LiftConnectionIO[D, AppErro
     D.lift(findAllByDeviceIdQuery(deviceId, limit, offset).to[List])
 
   override def searchGroups(deviceId: DeviceId, search: Search, limit: Limit, offset: Offset): D[List[GroupEntity]] =
-    D.lift(searchGroupsQuery(search, limit, offset).to[List])
+    D.lift(searchGroupsQuery(deviceId, search, limit, offset).to[List])
 
   override def incrementDeviceCount(groupId: GroupId, updatedAt: UpdatedAt): D[Unit] =
     D.lift(incrementDeviceCountQuery(groupId, updatedAt).run.void)
@@ -55,7 +55,7 @@ trait GroupQueries extends DoobieMeta {
   }
 
   def findByIdQuery(groupId: GroupId): doobie.Query0[GroupEntity] =
-    fr"""SELECT id, owner_device_id, name, device_count, is_public, created_at, updated_at FROM groups WHERE id = $groupId"""
+    fr"""SELECT id, public_id, owner_device_id, name, description, device_count, is_public, created_at, updated_at, null as is_joined FROM groups WHERE id = $groupId"""
       .query[GroupEntity]
 
   def findAllByDeviceIdQuery(deviceId: DeviceId, limit: Limit, offset: Offset): doobie.Query0[GroupEntity] =
@@ -68,7 +68,8 @@ trait GroupQueries extends DoobieMeta {
            groups.device_count,
            groups.is_public,
            groups.created_at,
-           groups.updated_at
+           groups.updated_at,
+           true as is_joined
          from
            groups
          join devices_groups on
@@ -81,11 +82,13 @@ trait GroupQueries extends DoobieMeta {
       .query[GroupEntity]
 
   def searchGroupsQuery(
-    search: Search,
-    limit:  Limit,
-    offset: Offset
+    deviceId: DeviceId,
+    search:   Search,
+    limit:    Limit,
+    offset:   Offset
   ): doobie.Query0[GroupEntity] = {
 
+    // FIXME add validation and do not search less then 4 symbols to avoid indexed large ram allocation?
     val nameLike     = if (search.value.length < 3) s"$search%" else s"%$search%"
     val publicIdLike = s"$search%"
 
@@ -98,14 +101,21 @@ trait GroupQueries extends DoobieMeta {
            groups.device_count,
            groups.is_public,
            groups.created_at,
-           groups.updated_at
+           groups.updated_at,
+           case
+             when devices_groups.group_id is not null then true
+             else false
+           end as is_joined
          from
            groups
+         left join devices_groups on
+           groups.id = devices_groups.group_id
+           and devices_groups.device_id = $deviceId
          where
            groups.is_public = true
            and (name ilike $nameLike or public_id ilike $publicIdLike)
          order by
-               updated_at desc
+           updated_at desc
          limit $limit offset $offset"""
       .query[GroupEntity]
   }

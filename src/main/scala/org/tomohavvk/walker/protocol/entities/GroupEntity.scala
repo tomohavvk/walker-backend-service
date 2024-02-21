@@ -13,7 +13,8 @@ case class GroupEntity(
   deviceCount:   DeviceCount,
   isPublic:      IsPublic,
   createdAt:     CreatedAt,
-  updatedAt:     UpdatedAt)
+  updatedAt:     UpdatedAt,
+  isJoined:      Option[IsJoined] = None)
 
 object GroupEntity {
 

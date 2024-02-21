@@ -32,6 +32,7 @@ trait DoobieMeta extends Instances with JavaTimeInstances with ProtocolSerializa
   implicit lazy val metaOffset: Meta[Offset]                     = Offset.deriving
   implicit lazy val metaGroupPublicId: Meta[GroupPublicId]       = GroupPublicId.deriving
   implicit lazy val metaDescription: Meta[Description]           = Description.deriving
+  implicit lazy val metaIsJoined: Meta[IsJoined]                 = IsJoined.deriving
 
   implicit lazy val jsonMeta: Meta[Json] =
     Meta.Advanced

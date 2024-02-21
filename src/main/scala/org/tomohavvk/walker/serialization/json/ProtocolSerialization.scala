@@ -61,6 +61,7 @@ trait ProtocolSerialization extends CirceConfig {
   implicit val codecOffset: Codec[Offset]               = Codec.from(Offset.deriving, Offset.deriving)
   implicit val codecGroupPublicId: Codec[GroupPublicId] = Codec.from(GroupPublicId.deriving, GroupPublicId.deriving)
   implicit val codecDescription: Codec[Description]     = Codec.from(Description.deriving, Description.deriving)
+  implicit val codecIsJoined: Codec[IsJoined]           = Codec.from(IsJoined.deriving, IsJoined.deriving)
 
   implicit val codecAltitudeAccuracy: Codec[AltitudeAccuracy] =
     Codec.from(AltitudeAccuracy.deriving, AltitudeAccuracy.deriving)
