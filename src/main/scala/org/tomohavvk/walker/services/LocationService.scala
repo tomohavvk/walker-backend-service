@@ -9,10 +9,14 @@ import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
 import cats.syntax.applicative._
 import io.odin.Logger
+import io.scalaland.chimney.dsl.TransformerOps
 import org.tomohavvk.walker.generation.TimeGen
 import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.persistence.repository.DeviceLocationRepository
 import org.tomohavvk.walker.persistence.repository.DeviceRepository
+import org.tomohavvk.walker.protocol.DeviceLocation
+import org.tomohavvk.walker.protocol.Types.AltitudeAccuracy
+import org.tomohavvk.walker.protocol.Types.Bearing
 import org.tomohavvk.walker.protocol.Types.CreatedAt
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.DeviceName
@@ -22,9 +26,13 @@ import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.errors.NotFoundError
 import org.tomohavvk.walker.protocol.errors.ViolatesForeignKeyError
 
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+
 trait LocationService[F[_]] {
   def lastLocation(deviceId: DeviceId): F[DeviceLocationEntity]
-  def upsertBatch(deviceId:  DeviceId, locations: List[DeviceLocationEntity]): F[Int]
+  def upsertBatch(deviceId:  DeviceId, locations: List[DeviceLocation]): F[Int]
 }
 
 class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
@@ -44,16 +52,17 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
           case None           => HF.raise(NotFoundError(s"Device: ${deviceId.value} not exists in the system"))
         }
 
-  override def upsertBatch(deviceId: DeviceId, locations: List[DeviceLocationEntity]): F[Int] = {
-    val sorted = locations.sortWith((x, y) => x.time.isBefore(y.time))
+  override def upsertBatch(deviceId: DeviceId, locations: List[DeviceLocation]): F[Int] = {
+    val entities     = makeEntities(deviceId, locations)
+    val sortedByTime = entities.sortWith((x, y) => x.time.isBefore(y.time))
 
     debug(deviceId, s"Upserting batch of locations. Size: ${locations.size}") >>
       transactor
-        .withTxn(deviceLocationRepo.upsertBatch(sorted))
+        .withTxn(deviceLocationRepo.upsertBatch(sortedByTime))
         .handleWith[AppError] {
           case _: ViolatesForeignKeyError =>
             debug(deviceId, "Device not found in the system. Create new before store current location") >>
-              transactor.withTxn(createDevice(deviceId) >> deviceLocationRepo.upsertBatch(sorted))
+              transactor.withTxn(createDevice(deviceId) >> deviceLocationRepo.upsertBatch(sortedByTime))
           case error => HF.raise(error)
         }
   }
@@ -68,4 +77,15 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
     loggerF
       .debug(s"|${deviceId.value}| $message")
 
+  private def makeEntities(deviceId: DeviceId, locations: List[DeviceLocation]): List[DeviceLocationEntity] =
+    locations
+      .map { location =>
+        location
+          .into[DeviceLocationEntity]
+          .withFieldConst(_.deviceId, deviceId)
+          .withFieldComputed(_.bearing, _.bearing.getOrElse(Bearing(0)))
+          .withFieldComputed(_.altitudeAccuracy, _.altitudeAccuracy.getOrElse(AltitudeAccuracy(0)))
+          .withFieldComputed(_.time, l => LocalDateTime.ofInstant(Instant.ofEpochMilli(l.time.value), ZoneOffset.UTC))
+          .transform
+      }
 }

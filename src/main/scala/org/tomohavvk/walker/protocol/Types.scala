@@ -23,6 +23,7 @@ object Types {
   @newtype case class UnixTime(value: Long)
   @newtype case class IsPublic(value: Boolean)
   @newtype case class IsJoined(value: Boolean)
+  @newtype case class IsPublicIdAvailable(value: Boolean)
   @newtype case class CreatedAt(value: LocalDateTime)
   @newtype case class UpdatedAt(value: LocalDateTime)
   @newtype case class Search(value: String)

@@ -32,6 +32,8 @@ import org.tomohavvk.walker.protocol.ws.GroupsSearched
 import org.tomohavvk.walker.protocol.ws.LocationPersist
 import org.tomohavvk.walker.protocol.ws.LocationPersisted
 import org.tomohavvk.walker.protocol.ws.MessageInType
+import org.tomohavvk.walker.protocol.ws.PublicIdAvailabilityCheck
+import org.tomohavvk.walker.protocol.ws.PublicIdAvailabilityChecked
 import org.tomohavvk.walker.protocol.ws.WSError
 import org.tomohavvk.walker.protocol.ws.WSMessageIn
 import org.tomohavvk.walker.protocol.ws.WSMessageOut
@@ -62,6 +64,9 @@ trait ProtocolSerialization extends CirceConfig {
   implicit val codecGroupPublicId: Codec[GroupPublicId] = Codec.from(GroupPublicId.deriving, GroupPublicId.deriving)
   implicit val codecDescription: Codec[Description]     = Codec.from(Description.deriving, Description.deriving)
   implicit val codecIsJoined: Codec[IsJoined]           = Codec.from(IsJoined.deriving, IsJoined.deriving)
+
+  implicit val codecIsPublicIdAvailable: Codec[IsPublicIdAvailable] =
+    Codec.from(IsPublicIdAvailable.deriving, IsPublicIdAvailable.deriving)
 
   implicit val codecAltitudeAccuracy: Codec[AltitudeAccuracy] =
     Codec.from(AltitudeAccuracy.deriving, AltitudeAccuracy.deriving)
@@ -101,13 +106,17 @@ trait ProtocolSerialization extends CirceConfig {
   implicit val codecGroupsGet: Codec[GroupsGet]             = deriveConfiguredCodec[GroupsGet]
   implicit val codecGroupsSearch: Codec[GroupsSearch]       = deriveConfiguredCodec[GroupsSearch]
 
+  implicit val codecPublicIdAvailabilityCheck: Codec[PublicIdAvailabilityCheck] =
+    deriveConfiguredCodec[PublicIdAvailabilityCheck]
+
   implicit val decoderWSMessageIn: Decoder[WSMessageIn] = cursor =>
     cursor.downField("type").as[MessageInType].flatMap {
-      case MessageInType.LocationPersist => codecLocationPersist(cursor)
-      case MessageInType.GroupCreate     => codecGroupCreate(cursor)
-      case MessageInType.GroupJoin       => codecGroupJoin(cursor)
-      case MessageInType.GroupsGet       => codecGroupsGet(cursor)
-      case MessageInType.GroupsSearch    => codecGroupsSearch(cursor)
+      case MessageInType.LocationPersist           => codecLocationPersist(cursor)
+      case MessageInType.GroupCreate               => codecGroupCreate(cursor)
+      case MessageInType.GroupJoin                 => codecGroupJoin(cursor)
+      case MessageInType.GroupsGet                 => codecGroupsGet(cursor)
+      case MessageInType.GroupsSearch              => codecGroupsSearch(cursor)
+      case MessageInType.PublicIdAvailabilityCheck => codecPublicIdAvailabilityCheck(cursor)
     }
 
   implicit val codecWSError: Codec[WSError]                     = deriveConfiguredCodec[WSError]
@@ -117,14 +126,18 @@ trait ProtocolSerialization extends CirceConfig {
   implicit val codecGroupsGot: Codec[GroupsGot]                 = deriveConfiguredCodec[GroupsGot]
   implicit val codecGroupsSearched: Codec[GroupsSearched]       = deriveConfiguredCodec[GroupsSearched]
 
+  implicit val codecPublicIdAvailabilityChecked: Codec[PublicIdAvailabilityChecked] =
+    deriveConfiguredCodec[PublicIdAvailabilityChecked]
+
   implicit val encoderWSMessageOut: Encoder[WSMessageOut] = Encoder.instance[WSMessageOut] { message =>
     val baseJson = message match {
-      case message: WSError           => codecWSError(message)
-      case message: LocationPersisted => codecLocationPersisted(message)
-      case message: GroupCreated      => codecGroupCreated(message)
-      case message: GroupJoined       => codecGroupJoined(message)
-      case message: GroupsGot         => codecGroupsGot(message)
-      case message: GroupsSearched    => codecGroupsSearched(message)
+      case message: WSError                     => codecWSError(message)
+      case message: LocationPersisted           => codecLocationPersisted(message)
+      case message: GroupCreated                => codecGroupCreated(message)
+      case message: GroupJoined                 => codecGroupJoined(message)
+      case message: GroupsGot                   => codecGroupsGot(message)
+      case message: GroupsSearched              => codecGroupsSearched(message)
+      case message: PublicIdAvailabilityChecked => codecPublicIdAvailabilityChecked(message)
     }
 
     baseJson.mapObject(_.add("type", message.`type`.value.asJson))

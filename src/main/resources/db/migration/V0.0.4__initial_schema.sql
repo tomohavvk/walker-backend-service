@@ -10,8 +10,8 @@ create table if not exists devices (
 
 -- devices groups
 create table if not exists groups (
- id varchar(64) PRIMARY KEY,
- public_id varchar(21) not null,
+ id varchar(21) PRIMARY KEY,
+ public_id varchar(32) not null,
  owner_device_id varchar(64) NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
  name varchar(128) not null,
  description varchar(256) not null,

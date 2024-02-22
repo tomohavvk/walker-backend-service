@@ -12,4 +12,4 @@ case class GroupView(
   isPublic:      IsPublic,
   createdAt:     CreatedAt,
   updatedAt:     UpdatedAt,
-  isJoined:      Option[IsJoined])
+  isJoined:      IsJoined)

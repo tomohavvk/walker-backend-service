@@ -14,7 +14,7 @@ case class GroupEntity(
   isPublic:      IsPublic,
   createdAt:     CreatedAt,
   updatedAt:     UpdatedAt,
-  isJoined:      Option[IsJoined] = None)
+  isJoined:      IsJoined = IsJoined(false)) // transient
 
 object GroupEntity {
 

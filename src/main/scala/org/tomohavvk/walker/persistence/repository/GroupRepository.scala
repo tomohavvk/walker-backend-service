@@ -4,6 +4,7 @@ import cats.Monad
 import cats.implicits.toFunctorOps
 import org.tomohavvk.walker.protocol.Types.DeviceId
 import org.tomohavvk.walker.protocol.Types.GroupId
+import org.tomohavvk.walker.protocol.Types.GroupPublicId
 import org.tomohavvk.walker.protocol.Types.Limit
 import org.tomohavvk.walker.protocol.Types.Offset
 import org.tomohavvk.walker.protocol.Types.Search
@@ -18,6 +19,8 @@ trait GroupRepository[D[_]] {
   def upsert(entity: GroupEntity): D[GroupEntity]
 
   def findById(groupId: GroupId): D[Option[GroupEntity]]
+
+  def isPublicIdExists(publicId: GroupPublicId): D[Boolean]
 
   def findAllByDeviceId(deviceId: DeviceId, limit: Limit, offset: Offset): D[List[GroupEntity]]
 
@@ -36,6 +39,9 @@ class DoobieGroupRepository[D[_]: Monad](implicit D: LiftConnectionIO[D, AppErro
   override def findById(groupId: GroupId): D[Option[GroupEntity]] =
     D.lift(findByIdQuery(groupId).option)
 
+  override def isPublicIdExists(publicId: GroupPublicId): D[Boolean] =
+    D.lift(isPublicIdExistsQuery(publicId).unique)
+
   override def findAllByDeviceId(deviceId: DeviceId, limit: Limit, offset: Offset): D[List[GroupEntity]] =
     D.lift(findAllByDeviceIdQuery(deviceId, limit, offset).to[List])
 
@@ -50,13 +56,17 @@ trait GroupQueries extends DoobieMeta {
 
   def upsertQuery(entity: GroupEntity): doobie.Update0 = {
     import entity._
-    fr"""INSERT INTO groups (id, public_id, owner_device_id, name, description, device_count, is_public, created_at, updated_at)
-        VALUES ($id, $publicId, $ownerDeviceId, $name, $description, $deviceCount, $isPublic, $createdAt, $updatedAt)""".update
+    fr"""insert INTO groups (id, public_id, owner_device_id, name, description, device_count, is_public, created_at, updated_at)
+        values ($id, $publicId, $ownerDeviceId, $name, $description, $deviceCount, $isPublic, $createdAt, $updatedAt)""".update
   }
 
   def findByIdQuery(groupId: GroupId): doobie.Query0[GroupEntity] =
-    fr"""SELECT id, public_id, owner_device_id, name, description, device_count, is_public, created_at, updated_at, null as is_joined FROM groups WHERE id = $groupId"""
+    fr"""select id, public_id, owner_device_id, name, description, device_count, is_public, created_at, updated_at, null as is_joined FROM groups where id = $groupId limit 1"""
       .query[GroupEntity]
+
+  def isPublicIdExistsQuery(publicId: GroupPublicId): doobie.Query0[Boolean] =
+    fr"""select (count(public_id) > 0) as exists from groups where public_id = $publicId"""
+      .query[Boolean]
 
   def findAllByDeviceIdQuery(deviceId: DeviceId, limit: Limit, offset: Offset): doobie.Query0[GroupEntity] =
     fr"""select

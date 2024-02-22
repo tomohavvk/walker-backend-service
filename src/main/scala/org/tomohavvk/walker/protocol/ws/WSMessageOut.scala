@@ -2,7 +2,7 @@ package org.tomohavvk.walker.protocol.ws
 
 import enumeratum.values.StringEnum
 import enumeratum.values.StringEnumEntry
-
+import org.tomohavvk.walker.protocol.Types.IsPublicIdAvailable
 import org.tomohavvk.walker.protocol.views.DeviceGroupView
 import org.tomohavvk.walker.protocol.views.GroupView
 
@@ -17,13 +17,12 @@ sealed abstract class MessageOutType(val value: String) extends StringEnumEntry
 object MessageOutType extends StringEnum[MessageOutType] {
   case object Error extends MessageOutType("error")
 
-  case object LocationPersisted extends MessageOutType("location_persisted")
-
-  case object GroupCreated extends MessageOutType("group_created")
-  case object GroupJoined  extends MessageOutType("group_joined")
-
-  case object GroupsGot      extends MessageOutType("groups_got")
-  case object GroupsSearched extends MessageOutType("groups_searched")
+  case object LocationPersisted           extends MessageOutType("location_persisted")
+  case object GroupCreated                extends MessageOutType("group_created")
+  case object GroupJoined                 extends MessageOutType("group_joined")
+  case object GroupsGot                   extends MessageOutType("groups_got")
+  case object GroupsSearched              extends MessageOutType("groups_searched")
+  case object PublicIdAvailabilityChecked extends MessageOutType("public_id_availability_checked")
 
   override def values: IndexedSeq[MessageOutType] = findValues
 }
@@ -51,4 +50,8 @@ case class GroupsGot(groups: List[GroupView]) extends WSMessageOut {
 
 case class GroupsSearched(groups: List[GroupView]) extends WSMessageOut {
   override val `type`: MessageOutType = MessageOutType.GroupsSearched
+}
+
+case class PublicIdAvailabilityChecked(available: IsPublicIdAvailable) extends WSMessageOut {
+  override val `type`: MessageOutType = MessageOutType.PublicIdAvailabilityChecked
 }

@@ -22,6 +22,7 @@ import org.tomohavvk.walker.protocol.ws.GroupCreate
 trait GroupService[F[_]] {
   def createGroup(deviceId:                     DeviceId, create: GroupCreate): F[GroupEntity]
   def getAllDeviceOwnedOrJoinedGroups(deviceId: DeviceId, limit:  Limit, offset: Offset): F[List[GroupEntity]]
+  def isPublicIdAvailable(publicId:             GroupPublicId): F[IsPublicIdAvailable]
   def searchGroups(deviceId:                    DeviceId, search: Search, limit: Limit, offset: Offset): F[List[GroupEntity]]
 }
 
@@ -51,6 +52,14 @@ class GroupServiceImpl[F[_]: Sync, D[_]: Monad](
           case error                      => HF.raise(error)
         }
         .flatTap(_ => loggerF.debug("Create group success"))
+        .map(_.copy(isJoined = IsJoined(true)))
+
+  override def isPublicIdAvailable(publicId: GroupPublicId): F[IsPublicIdAvailable] =
+    loggerF.debug(s"Check public id availability: ${publicId.value}") >>
+      transactor
+        .withTxn(groupRepo.isPublicIdExists(publicId))
+        .map(isExist => IsPublicIdAvailable(!isExist))
+        .flatTap(isAvailable => loggerF.debug(s"Public id:  ${publicId.value} availability: $isAvailable"))
 
   override def getAllDeviceOwnedOrJoinedGroups(deviceId: DeviceId, limit: Limit, offset: Offset): F[List[GroupEntity]] =
     loggerF.debug("Get all device owned or joined groups") >>

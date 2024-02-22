@@ -34,7 +34,7 @@ class DeviceLocationEventStream[F[_]: Temporal: Clock, D[_]](
           committable.record.value.event match {
             case event: DeviceLocationEvent =>
               locationService
-                .upsertBatch(event.deviceId, makeEntities(event))
+                .upsertBatch(event.deviceId, event.locations)
                 .as(committable.offset)
           }
         }
@@ -42,16 +42,4 @@ class DeviceLocationEventStream[F[_]: Temporal: Clock, D[_]](
         .debug()
         .compile
         .drain
-
-  private def makeEntities(event: DeviceLocationEvent): List[DeviceLocationEntity] =
-    event.locations
-      .map { location =>
-        location
-          .into[DeviceLocationEntity]
-          .withFieldConst(_.deviceId, event.deviceId)
-          .withFieldComputed(_.bearing, _.bearing.getOrElse(Bearing(0)))
-          .withFieldComputed(_.altitudeAccuracy, _.altitudeAccuracy.getOrElse(AltitudeAccuracy(0)))
-          .withFieldComputed(_.time, l => LocalDateTime.ofInstant(Instant.ofEpochMilli(l.time.value), ZoneOffset.UTC))
-          .transform
-      }
 }
