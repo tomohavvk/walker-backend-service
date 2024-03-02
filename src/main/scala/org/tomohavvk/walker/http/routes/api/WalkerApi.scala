@@ -18,16 +18,16 @@ import org.tomohavvk.walker.utils.UnliftF
 import sttp.model.StatusCode.Ok
 import sttp.tapir.server.http4s.Http4sServerOptions
 
-class WalkerApi[F[_]: Functor: Applicative, H[_]: Async](
+class WalkerApi[F[_]: Functor: Applicative, M[_]: Async](
   endpoints:              WalkerEndpoints
-)(implicit serverOptions: Http4sServerOptions[H],
-  U:                      UnliftF[F, H, AppError],
-  loggerH:                Logger[H]) {
+)(implicit serverOptions: Http4sServerOptions[M],
+  U:                      UnliftF[F, M, AppError],
+  loggerM:                Logger[M]) {
 
-  private val healthProbe: HttpRoutes[H] =
+  private val healthProbe: HttpRoutes[M] =
     endpoints.livenessEndpoint.toRoutes(_ => Applicative[F].pure((Ok, probeView)))
 
-  private val readyProbe: HttpRoutes[H] =
+  private val readyProbe: HttpRoutes[M] =
     endpoints.readinessEndpoint.toRoutes(_ => Applicative[F].pure((Ok, probeView)))
 
   private val probeView: ProbeView = ProbeView(name, "walker backend service", version, scalaVersion, sbtVersion)

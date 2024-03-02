@@ -5,6 +5,7 @@ import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
 import cats.effect.std.Console
+import cats.implicits.catsSyntaxFlatten
 import doobie.implicits._
 import io.odin.Level
 import io.odin.consoleLogger
@@ -12,6 +13,7 @@ import org.tomohavvk.walker.module.Environment
 import org.tomohavvk.walker.module.TransactorModule
 import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.protocol.errors.AppError
+import org.tomohavvk.walker.protocol.errors.InternalError
 import org.tomohavvk.walker.utils.LiftConnectionIO.liftConnectionIOForEitherT
 
 object Launcher extends IOApp {
@@ -20,15 +22,18 @@ object Launcher extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     Environment
       .make[AppEffect, DbEffect, IO]
-      .flatMap {
+      .flatMap[AppError, Either[AppError, ExitCode]] {
         case Right(env) =>
-          EitherT.liftF[IO, AppError, ExitCode](TransactorModule.make[AppEffect, DbEffect, IO](env.configs).use {
-            txDeps => runApp(env, txDeps.transactor).value.flatMap(handleResult)
-          })
+          EitherT.liftF {
+            TransactorModule.make[AppEffect, DbEffect, IO](env.configs).use { txDeps =>
+              runApp(env, txDeps.transactor).value
+            }
+          }
 
-        case Left(exception) => failApp(exception)
+        case Left(exception) => EitherT.rightT(Left(InternalError(exception.getMessage)))
       }
       .value
+      .map(_.flatten)
       .flatMap(handleResult)
 
   private def runApp(

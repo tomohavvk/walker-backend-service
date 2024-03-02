@@ -16,14 +16,14 @@ case class TransactorDeps[F[_], B[_]](transactor: Transactor[F, B])
 
 object TransactorModule {
 
-  def make[F[_]: Async, B[_], C[_]: Async: MonadCancelThrow](
+  def make[F[_]: Async, D[_], M[_]: Async: MonadCancelThrow](
     configs:    Configs
-  )(implicit T: TransactConnectionIO[F, B, C]
-  ): Resource[C, TransactorDeps[F, B]] =
+  )(implicit T: TransactConnectionIO[F, D, M]
+  ): Resource[M, TransactorDeps[F, D]] =
     for {
-      transactor <- makeTransactor[C](configs.database)
-      postgresTransactor = new PostgresTransactor[F, B, C](transactor)
-    } yield TransactorDeps[F, B](postgresTransactor)
+      transactor <- makeTransactor[M](configs.database)
+      postgresTransactor = new PostgresTransactor[F, D, M](transactor)
+    } yield TransactorDeps[F, D](postgresTransactor)
 
   private def makeTransactor[F[_]: Async](config: DatabaseConfig): Resource[F, HikariTransactor[F]] =
     for {

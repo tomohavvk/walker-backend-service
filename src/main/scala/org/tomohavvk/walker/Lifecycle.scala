@@ -17,37 +17,37 @@ import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.streams.DeviceLocationEventStream
 import org.tomohavvk.walker.utils.UnliftF
 
-class Lifecycle[F[_]: Async, D[_], H[_]: Async: Console](
+class Lifecycle[F[_]: Async, D[_], M[_]: Async: Console](
   configs:     Configs,
-  logger:      Logger[H],
-  httpServer:  HttpServer[F, H],
+  logger:      Logger[M],
+  httpServer:  HttpServer[F, M],
   eventStream: DeviceLocationEventStream[F, D]
-)(implicit U:  UnliftF[F, H, AppError]) {
+)(implicit U:  UnliftF[F, M, AppError]) {
 
-  private val startHttpServer: H[Unit] =
+  private val startHttpServer: M[Unit] =
     httpServer.start >>
       logger.info("HTTP server finished")
 
-  private val startDeviceLocationStream: H[Unit] =
+  private val startDeviceLocationStream: M[Unit] =
     U.unlift(eventStream.stream) >> logger.info("Streams finished")
 
-  private val devLoop: H[Unit] =
+  private val devLoop: M[Unit] =
     logger.info(s"Service running in DEV. Type ENTER to stop it...") >>
-      Monad[H].whileM_(Console[H].readLine.map(_ === "\n"))(Applicative[H].unit) >>
+      Monad[M].whileM_(Console[M].readLine.map(_ === "\n"))(Applicative[M].unit) >>
       logger.info(s"Service stopping in DEV...")
 
-  private val prodLoop: H[Unit] =
+  private val prodLoop: M[Unit] =
     logger.info(s"Server running in PROD. Send SIGTERM to stop it...") >>
-      Async[H].never[Unit]
+      Async[M].never[Unit]
 
-  private val envLoop: AppConfig => H[Unit] = config =>
+  private val envLoop: AppConfig => M[Unit] = config =>
     config.env match {
       case Dev  => devLoop
       case Prod => prodLoop
     }
 
-  val start: H[ExitCode] =
+  val start: M[ExitCode] =
 //    val streamAndHttp = Spawn[H].race(startHttpServer, startDeviceLocationStream)
-    Spawn[H].race(envLoop(configs.app), startHttpServer).as(ExitCode.Success)
+    Spawn[M].race(envLoop(configs.app), startHttpServer).as(ExitCode.Success)
 
 }

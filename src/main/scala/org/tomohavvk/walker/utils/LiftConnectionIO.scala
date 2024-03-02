@@ -8,9 +8,9 @@ import org.tomohavvk.walker.utils.LiftConnectionIO.SqlErrorHandler
 
 import java.sql.SQLException
 
-trait LiftConnectionIO[F[_], E] {
+trait LiftConnectionIO[D[_], E] {
 
-  def lift[A](cio: ConnectionIO[A])(implicit errorHandler: SqlErrorHandler[E]): F[A]
+  def lift[A](cio: ConnectionIO[A])(implicit errorHandler: SqlErrorHandler[E]): D[A]
 }
 
 object LiftConnectionIO {

@@ -4,13 +4,13 @@ import cats.effect.kernel.MonadCancelThrow
 import doobie.hikari.HikariTransactor
 import org.tomohavvk.walker.utils.TransactConnectionIO
 
-class PostgresTransactor[F[_], G[_], M[_]](
+class PostgresTransactor[F[_], D[_], M[_]](
   xa:         HikariTransactor[M]
-)(implicit T: TransactConnectionIO[F, G, M],
+)(implicit T: TransactConnectionIO[F, D, M],
   bracket:    MonadCancelThrow[M])
-    extends Transactor[F, G] {
+    extends Transactor[F, D] {
 
-  override def withTxn[A](bodyF: => G[A]): F[A] =
+  override def withTxn[A](bodyF: => D[A]): F[A] =
     T.transact(bodyF, xa)
 
 }

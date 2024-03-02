@@ -20,18 +20,14 @@ package object routes {
   implicit class MappedHttp4sHttpEndpoint[I, O](
     e: Endpoint[Unit, I, EndpointError, O, Any]) {
 
-    def toRoutes[F[_], H[_]: Async](
+    def toRoutes[F[_], M[_]: Async](
       logic:                  I => F[O]
-    )(implicit serverOptions: Http4sServerOptions[H],
-      U:                      UnliftF[F, H, AppError],
-      loggerH:                Logger[H]
-    ): HttpRoutes[H] = {
-
-      def unlifted(i: I): H[Either[AppError, O]] =
-        U.unlift[O](logic(i))
-
+    )(implicit serverOptions: Http4sServerOptions[M],
+      U:                      UnliftF[F, M, AppError],
+      loggerM:                Logger[M]
+    ): HttpRoutes[M] =
       Http4sServerInterpreter(serverOptions).toRoutes(e.serverLogic { i =>
-        unlifted(i)
+        U.unlift[O](logic(i))
           .map {
             case Left(error) =>
               (StatusCode.unsafeApply(error.httpCode.value) -> error).asLeft
@@ -39,11 +35,10 @@ package object routes {
               ok.asRight
           }
           .flatMap[Either[(StatusCode, AppError), O]] {
-            case v @ Right(_) => Applicative[H].pure(v)
+            case v @ Right(_) => Applicative[M].pure(v)
             case e @ Left((_, error)) =>
-              loggerH.error(error.logMessage.value).as(e)
+              loggerM.error(error.logMessage.value).as(e)
           }
       })
-    }
   }
 }

@@ -22,9 +22,9 @@ import sttp.tapir.statusCode
 
 import scala.annotation.tailrec
 
-case class ErrorHandling[H[_]]() {
+case class ErrorHandling[M[_]]() {
 
-  def decodeFailureHandler(implicit errorCodecs: ErrorCodecs): DecodeFailureHandler[H] = {
+  def decodeFailureHandler(implicit errorCodecs: ErrorCodecs): DecodeFailureHandler[M] = {
     import errorCodecs._
 
     DefaultDecodeFailureHandler.apply(

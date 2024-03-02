@@ -28,132 +28,132 @@ import org.tomohavvk.walker.protocol.ws.WSError
 import org.tomohavvk.walker.protocol.ws.WSMessageIn
 import org.tomohavvk.walker.protocol.ws.WSMessageOut
 
-class WalkerWSApi[F[_]: Monad, H[_]: Monad](
+class WalkerWSApi[F[_]: Monad, M[_]: Monad](
   deviceService:  DeviceService[F],
   messageHandler: WalkerWSMessageHandler[F],
-  subscribers:    WSSubscribers[H],
-  loggerH:        Logger[H]
+  subscribers:    WSSubscribers[M],
+  loggerM:        Logger[M]
 )(implicit
-  C: Concurrent[H],
-  U: UnliftF[F, H, AppError])
-    extends Http4sDsl[H]
+  C: Concurrent[M],
+  U: UnliftF[F, M, AppError])
+    extends Http4sDsl[M]
     with ProtocolSerialization {
 
-  def wsRoute(wsb: WebSocketBuilder2[H]): HttpRoutes[H] =
-    HttpRoutes.of[H] {
+  def wsRoute(wsb: WebSocketBuilder2[M]): HttpRoutes[M] =
+    HttpRoutes.of[M] {
       case req @ GET -> Root / "api" / "v1" / "ws" / deviceId =>
-        loggerH.debug(s"Handle WS handshake with device: $deviceId") >>
+        loggerM.debug(s"Handle WS handshake with device: $deviceId") >>
           getDevice(deviceId).flatMap {
             case Right(device) =>
-              Topic[H, WebSocketFrame].flatMap { topic =>
+              Topic[M, WebSocketFrame].flatMap { topic =>
                 wsb.build(topic.subscribe(10), wsStream(device.id, topic, _, subscribers))
               }
 
             case Left(error) =>
-              Response[H](status = Status.NotFound, body = Stream(error.apiMessage.value).through(utf8.encode)).pure[H]
+              Response[M](status = Status.NotFound, body = Stream(error.apiMessage.value).through(utf8.encode)).pure[M]
           }
     }
 
   private def wsStream(
     deviceId:    DeviceId,
-    topic:       Topic[H, WebSocketFrame],
-    stream:      Stream[H, WebSocketFrame],
-    subscribers: WSSubscribers[H]
-  ): Stream[H, Unit] =
+    topic:       Topic[M, WebSocketFrame],
+    stream:      Stream[M, WebSocketFrame],
+    subscribers: WSSubscribers[M]
+  ): Stream[M, Unit] =
     Stream.eval(addDevice(deviceId, topic, subscribers)) >>
       stream
-        .evalMap[H, Option[String]] {
+        .evalMap[M, Option[String]] {
           case WebSocketFrame.Text(message, _) => handleIncomingMessage(deviceId, message)
           case WebSocketFrame.Close(_)         => handleCloseConnection(deviceId, subscribers)
           case unknown                         => handleUnknownFrame(deviceId, unknown)
         }
         .collect { case Some(message) => message }
-        //   .evalTap(x => println(x).pure[H])
+        //   .evalTap(x => println(x).pure[M])
         .map(text => WebSocketFrame.Text(text))
         .through(topic.publish)
 
-  private def handleIncomingMessage(deviceId: DeviceId, message: String): H[Option[String]] =
-    loggerH
+  private def handleIncomingMessage(deviceId: DeviceId, message: String): M[Option[String]] =
+    loggerM
       .debug(s"Handle incoming message from device: ${deviceId.value}") >>
       (message match {
-        case "ping" => Option("pong").pure[H]
+        case "ping" => Option("pong").pure[M]
         case _ =>
           decode[WSMessageIn](message) match {
             case Right(message) =>
               U.unlift(messageHandler.handle(deviceId, message)).flatMap {
-                case Right(value) => value.asJson.toString().some.pure[H]
+                case Right(value) => value.asJson.toString().some.pure[M]
                 case Left(error) =>
-                  loggerH.error(error.logMessage.value) >>
+                  loggerM.error(error.logMessage.value) >>
                     WSError(error.apiMessage.value)
                       .asInstanceOf[WSMessageOut]
                       .asJson(encoderWSMessageOut)
                       .noSpaces
                       .some
-                      .pure[H]
+                      .pure[M]
               }
 
             case Left(error) =>
-              BadRequestError(error.getLocalizedMessage).asInstanceOf[AppError].asJson.toString().some.pure[H]
+              BadRequestError(error.getLocalizedMessage).asInstanceOf[AppError].asJson.toString().some.pure[M]
           }
       })
 
   private def handleCloseConnection(
     deviceId:    DeviceId,
-    subscribers: WSSubscribers[H]
-  ): H[Option[String]] =
-    loggerH.debug(s"Handle connection close for device: ${deviceId.value}") >>
+    subscribers: WSSubscribers[M]
+  ): M[Option[String]] =
+    loggerM.debug(s"Handle connection close for device: ${deviceId.value}") >>
       subscribers.ref.get
         .flatMap { subscriptionMap =>
-          loggerH.debug(s"Subscription ref size: ${subscriptionMap.size}") >>
+          loggerM.debug(s"Subscription ref size: ${subscriptionMap.size}") >>
             (subscriptionMap.get(deviceId) match {
               case Some(topic) => closeTopic(deviceId, topic) >> removeDevice(deviceId, subscribers)
-              case None        => loggerH.warn(s"Can't find topic for device: ${deviceId.value}")
+              case None        => loggerM.warn(s"Can't find topic for device: ${deviceId.value}")
             })
         }
         .as(NoMessage)
 
-  private def handleUnknownFrame(deviceId: DeviceId, unknown: WebSocketFrame): H[Option[String]] =
-    loggerH.error(s"Handled unknown frame for device: ${deviceId.value}. Frame: $unknown") >>
-      Option.empty[String].pure[H]
+  private def handleUnknownFrame(deviceId: DeviceId, unknown: WebSocketFrame): M[Option[String]] =
+    loggerM.error(s"Handled unknown frame for device: ${deviceId.value}. Frame: $unknown") >>
+      Option.empty[String].pure[M]
 
-  private def closeTopic(deviceId: DeviceId, topic: Topic[H, WebSocketFrame]): H[Unit] =
+  private def closeTopic(deviceId: DeviceId, topic: Topic[M, WebSocketFrame]): M[Unit] =
     topic.close.flatMap[Unit] {
       case Right(_) =>
-        loggerH.debug(s"Successfully close the topic for device: ${deviceId.value}")
+        loggerM.debug(s"Successfully close the topic for device: ${deviceId.value}")
       case Left(error) =>
-        loggerH.error(s"Error during close device topic: ${deviceId.value}. Error: $error")
+        loggerM.error(s"Error during close device topic: ${deviceId.value}. Error: $error")
     }
 
   private def addDevice(
     deviceId:    DeviceId,
-    topic:       Topic[H, WebSocketFrame],
-    subscribers: WSSubscribers[H]
-  ): H[Unit] =
+    topic:       Topic[M, WebSocketFrame],
+    subscribers: WSSubscribers[M]
+  ): M[Unit] =
     subscribers.ref.tryUpdate(_ + (deviceId -> topic)).flatMap {
       case true =>
-        loggerH.debug(
+        loggerM.debug(
           s"Successfully added subscription ref for device: ${deviceId.value}"
         )
       case false =>
-        loggerH.error(s"Can't remove topic from subscription ref. Investigation needed")
+        loggerM.error(s"Can't remove topic from subscription ref. Investigation needed")
     }
 
-  private def removeDevice(deviceId: DeviceId, subscribers: WSSubscribers[H]): H[Unit] =
+  private def removeDevice(deviceId: DeviceId, subscribers: WSSubscribers[M]): M[Unit] =
     subscribers.ref.tryUpdate(_ - deviceId).flatMap {
       case true =>
-        loggerH.debug(
+        loggerM.debug(
           s"Successfully remove subscription ref for device: ${deviceId.value}"
         )
       case false =>
-        loggerH.error(s"Can't remove topic from subscription ref. Investigation needed")
+        loggerM.error(s"Can't remove topic from subscription ref. Investigation needed")
     }
 
-  private def getDevice(deviceId: String): H[Either[AppError, DeviceEntity]] =
+  private def getDevice(deviceId: String): M[Either[AppError, DeviceEntity]] =
     U.unlift(deviceService.getDevice(DeviceId(deviceId)))
 }
 
 object WalkerWSApi {
   val NoMessage: Option[String] = Option.empty[String]
 
-  case class WSSubscribers[H[_]](ref: Ref[H, Map[DeviceId, Topic[H, WebSocketFrame]]])
+  case class WSSubscribers[M[_]](ref: Ref[M, Map[DeviceId, Topic[M, WebSocketFrame]]])
 }

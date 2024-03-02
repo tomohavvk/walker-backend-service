@@ -31,45 +31,45 @@ import sttp.tapir.server.interceptor.exception.DefaultExceptionHandler
 
 object HttpModule {
 
-  def make[F[_]: Monad, H[_]: Async](
+  def make[F[_]: Monad, M[_]: Async](
     services:   ServicesDeps[F],
     codecs:     Codecs,
     config:     ServerConfig
-  )(implicit U: UnliftF[F, H, AppError],
-    LiftHF:     H ~> F,
+  )(implicit U: UnliftF[F, M, AppError],
+    LiftHF:     M ~> F,
     HF:         Handle[F, AppError],
-    loggerH:    Logger[H],
+    loggerM:    Logger[M],
     loggerF:    Logger[F]
-  ): F[HttpServer[F, H]] = {
-    implicit val option: Http4sServerOptions[H] = makeOptions[H](codecs)
+  ): F[HttpServer[F, M]] = {
+    implicit val option: Http4sServerOptions[M] = makeOptions[M](codecs)
     val walkerEndpoints                         = new WalkerEndpoints(codecs.errorCodecs, codecs)
 
     val walkerApi =
-      new WalkerApi[F, H](walkerEndpoints)
+      new WalkerApi[F, M](walkerEndpoints)
 
     val wsMessageHandler =
       new WalkerWSMessageHandlerImpl[F](services.locationService, services.groupService, services.devicesGroupService)
 
-    val openApi = new OpenApiRoutes[H](walkerEndpoints)
+    val openApi = new OpenApiRoutes[M](walkerEndpoints)
 
-    val apiRoutes: HttpRoutes[H] = openApi.routes <+> walkerApi.routes
+    val apiRoutes: HttpRoutes[M] = openApi.routes <+> walkerApi.routes
 
-    LiftHF(Ref.of[H, Map[DeviceId, Topic[H, WebSocketFrame]]](Map.empty))
+    LiftHF(Ref.of[M, Map[DeviceId, Topic[M, WebSocketFrame]]](Map.empty))
       .map { subscriptionRef =>
         val walkerWsApi =
-          new WalkerWSApi[F, H](services.deviceService, wsMessageHandler, WSSubscribers[H](subscriptionRef), loggerH)
+          new WalkerWSApi[F, M](services.deviceService, wsMessageHandler, WSSubscribers[M](subscriptionRef), loggerM)
 
         new HttpServer(config, apiRoutes, walkerWsApi)
       }
   }
 
-  private def makeOptions[H[_]: Sync](codecs: Codecs): Http4sServerOptions[H] =
+  private def makeOptions[M[_]: Sync](codecs: Codecs): Http4sServerOptions[M] =
     Http4sServerOptions
-      .customiseInterceptors[H]
+      .customiseInterceptors[M]
       .copy(
-        exceptionHandler = Some(DefaultExceptionHandler[H]),
+        exceptionHandler = Some(DefaultExceptionHandler[M]),
         serverLog = Some(Http4sServerOptions.defaultServerLog),
-        decodeFailureHandler = ErrorHandling[H]().decodeFailureHandler(codecs.errorCodecs)
+        decodeFailureHandler = ErrorHandling[M]().decodeFailureHandler(codecs.errorCodecs)
       )
       .options
       .appendInterceptor(CORSInterceptor.default)

@@ -10,7 +10,7 @@ import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import sttp.tapir.server.http4s.Http4sServerInterpreter
 import sttp.tapir.swagger.SwaggerUI
 
-class OpenApiRoutes[H[_]: Async](endpoints: WalkerEndpoints) {
+class OpenApiRoutes[M[_]: Async](endpoints: WalkerEndpoints) {
 
   private val e = List(
     endpoints.livenessEndpoint,
@@ -24,6 +24,6 @@ class OpenApiRoutes[H[_]: Async](endpoints: WalkerEndpoints) {
 
   private val openApiYaml: String = OpenAPIDocsInterpreter().toOpenAPI(e, openApiInfo).toYaml
 
-  val routes: HttpRoutes[H] = Http4sServerInterpreter[H]().toRoutes(SwaggerUI[H](openApiYaml))
+  val routes: HttpRoutes[M] = Http4sServerInterpreter[M]().toRoutes(SwaggerUI[M](openApiYaml))
 
 }

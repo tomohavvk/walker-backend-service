@@ -6,8 +6,8 @@ import doobie.free.connection.ConnectionIO
 import doobie._
 import doobie.implicits._
 
-trait TransactConnectionIO[F[_], G[_], M[_]] {
-  def transact[A](ga: G[A], xa: Transactor[M])(implicit M: MonadCancelThrow[M]): F[A]
+trait TransactConnectionIO[F[_], D[_], M[_]] {
+  def transact[A](ga: D[A], xa: Transactor[M])(implicit M: MonadCancelThrow[M]): F[A]
 }
 
 object TransactConnectionIO {
@@ -19,10 +19,10 @@ object TransactConnectionIO {
     new TransactConnectionIO[EitherT[M, E, *], EitherT[ConnectionIO, E, *], M] {
 
       override def transact[A](
-        ga:         EitherT[ConnectionIO, E, A],
+        da:         EitherT[ConnectionIO, E, A],
         xa:         Transactor[M]
       )(implicit M: MonadCancelThrow[M]
       ): EitherT[M, E, A] =
-        EitherT.apply[M, E, A](ga.value.transact(xa))
+        EitherT.apply[M, E, A](da.value.transact(xa))
     }
 }
