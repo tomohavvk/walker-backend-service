@@ -7,7 +7,7 @@ import doobie._
 import doobie.implicits._
 
 trait TransactConnectionIO[F[_], D[_], M[_]] {
-  def transact[A](ga: D[A], xa: Transactor[M])(implicit M: MonadCancelThrow[M]): F[A]
+  def transact[A](da: D[A], xa: Transactor[M])(implicit M: MonadCancelThrow[M]): F[A]
 }
 
 object TransactConnectionIO {

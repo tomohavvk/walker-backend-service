@@ -1,7 +1,6 @@
 package org.tomohavvk.walker.services
 
-import cats.effect.kernel.Clock
-import cats.effect.kernel.Sync
+import cats.Monad
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
 import cats.implicits.toFunctorOps
@@ -35,12 +34,14 @@ trait LocationService[F[_]] {
   def upsertBatch(deviceId:  DeviceId, locations: List[DeviceLocation]): F[Int]
 }
 
-class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
+class LocationServiceImpl[F[_]: Monad, D[_]: Monad](
   deviceRepo:         DeviceRepository[D],
   deviceLocationRepo: DeviceLocationRepository[D],
   transactor:         Transactor[F, D],
   loggerF:            Logger[F]
-)(implicit HF:        Handle[F, AppError])
+)(implicit
+  HE: Handle[F, AppError],
+  T:  TimeGen[F])
     extends LocationService[F] {
 
   override def lastLocation(deviceId: DeviceId): F[DeviceLocationEntity] =
@@ -49,7 +50,7 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
         .withTxn(deviceLocationRepo.findLastById(deviceId))
         .flatMap {
           case Some(location) => location.pure[F]
-          case None           => HF.raise(NotFoundError(s"Device: ${deviceId.value} not exists in the system"))
+          case None           => HE.raise(NotFoundError(s"Device: ${deviceId.value} last location not found in the system"))
         }
 
   override def upsertBatch(deviceId: DeviceId, locations: List[DeviceLocation]): F[Int] = {
@@ -57,21 +58,22 @@ class LocationServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
     val sortedByTime = entities.sortWith((x, y) => x.time.isBefore(y.time))
 
     debug(deviceId, s"Upserting batch of locations. Size: ${locations.size}") >>
-      transactor
-        .withTxn(deviceLocationRepo.upsertBatch(sortedByTime))
-        .handleWith[AppError] {
-          case _: ViolatesForeignKeyError =>
-            debug(deviceId, "Device not found in the system. Create new before store current location") >>
-              transactor.withTxn(createDevice(deviceId) >> deviceLocationRepo.upsertBatch(sortedByTime))
-          case error => HF.raise(error)
-        }
+      TimeGen[F].genTimeUtc.flatMap { now =>
+        transactor
+          .withTxn(deviceLocationRepo.upsertBatch(sortedByTime))
+          .handleWith[AppError] {
+            case _: ViolatesForeignKeyError =>
+              debug(deviceId, "Device not found in the system. Create new before store current location") >>
+                transactor.withTxn(
+                  createDevice(deviceId, CreatedAt(now)) >> deviceLocationRepo.upsertBatch(sortedByTime)
+                )
+            case error => HE.raise(error)
+          }
+      }
   }
 
-  private def createDevice(deviceId: DeviceId): D[Unit] =
-    TimeGen[D].genTimeUtc
-      .map(createdAt => DeviceEntity(deviceId, DeviceName("Walker"), CreatedAt(createdAt)))
-      .flatMap(deviceRepo.upsert)
-      .void
+  private def createDevice(deviceId: DeviceId, createdAt: CreatedAt): D[Unit] =
+    deviceRepo.upsert(DeviceEntity(deviceId, DeviceName("Walker"), createdAt)).void
 
   private def debug(deviceId: DeviceId, message: String): F[Unit] =
     loggerF

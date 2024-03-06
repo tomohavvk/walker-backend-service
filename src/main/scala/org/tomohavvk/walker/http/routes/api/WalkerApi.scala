@@ -1,7 +1,6 @@
 package org.tomohavvk.walker.http.routes.api
 
 import cats.Applicative
-import cats.Functor
 import cats.effect.kernel.Async
 import cats.implicits.toSemigroupKOps
 import io.odin.Logger
@@ -18,7 +17,7 @@ import org.tomohavvk.walker.utils.UnliftF
 import sttp.model.StatusCode.Ok
 import sttp.tapir.server.http4s.Http4sServerOptions
 
-class WalkerApi[F[_]: Functor: Applicative, M[_]: Async](
+class WalkerApi[F[_]: Applicative, M[_]: Async](
   endpoints:              WalkerEndpoints
 )(implicit serverOptions: Http4sServerOptions[M],
   U:                      UnliftF[F, M, AppError],

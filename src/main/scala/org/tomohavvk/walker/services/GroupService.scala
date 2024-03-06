@@ -1,13 +1,13 @@
 package org.tomohavvk.walker.services
 
-import cats.effect.kernel.Sync
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
 import cats.implicits.toFunctorOps
-import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
+import cats.Applicative
 import cats.Monad
 import cats.Monoid
+import cats.mtl.Handle
 import io.odin.Logger
 import org.tomohavvk.walker.generation.TimeGen
 import org.tomohavvk.walker.persistence.Transactor
@@ -26,12 +26,13 @@ trait GroupService[F[_]] {
   def searchGroups(deviceId:                    DeviceId, search: Search, limit: Limit, offset: Offset): F[List[GroupEntity]]
 }
 
-class GroupServiceImpl[F[_]: Sync, D[_]: Monad](
+class GroupServiceImpl[F[_]: Monad, D[_]: Monad](
   groupRepo:       GroupRepository[D],
   deviceGroupRepo: DeviceGroupRepository[D],
   transactor:      Transactor[F, D],
   loggerF:         Logger[F]
-)(implicit HF:     Handle[F, AppError])
+)(implicit HE:     Handle[F, AppError],
+  T:               TimeGen[F])
     extends GroupService[F] {
 
   override def createGroup(deviceId: DeviceId, create: GroupCreate): F[GroupEntity] =
@@ -48,8 +49,8 @@ class GroupServiceImpl[F[_]: Sync, D[_]: Monad](
             }
         }
         .handleWith[AppError] {
-          case _: ViolatesForeignKeyError => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
-          case error                      => HF.raise(error)
+          case _: ViolatesForeignKeyError => HE.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
+          case error                      => HE.raise(error)
         }
         .flatTap(_ => loggerF.debug("Create group success"))
         .map(_.copy(isJoined = IsJoined(true)))
@@ -74,9 +75,9 @@ class GroupServiceImpl[F[_]: Sync, D[_]: Monad](
         .flatTap(_ => loggerF.debug("Get all device owned or joined groups success"))
 
   private def check(create: GroupCreate): F[Unit] =
-    if (create.isPublic.value && create.publicId.isEmpty)
-      HF.raise(BadRequestError(s"Public ID should not be empty for public group"))
-    else HF.applicative.unit
+    Applicative[F].whenA(create.isPublic.value && create.publicId.exists(_.value.isEmpty)) {
+      HE.raise(BadRequestError(s"Public ID should not be empty for public group"))
+    }
 
   private def makeGroupEntity(deviceId: DeviceId, create: GroupCreate): F[GroupEntity] =
     TimeGen[F].genTimeUtc.map { createdAt =>

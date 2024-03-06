@@ -24,7 +24,7 @@ class Application[F[_]: Async, D[_]: Sync, M[_]: Async: Console](
   implicit environment: Environment[F, D, M],
   transactor:           Transactor[F, D],
   D:                    LiftConnectionIO[D, AppError],
-  HF:                   Handle[F, AppError],
+  HE:                   Handle[F, AppError],
   HD:                   Handle[D, AppError],
   U:                    UnliftF[F, M, AppError],
   LiftHF:               M ~> F) {
@@ -38,7 +38,7 @@ class Application[F[_]: Async, D[_]: Sync, M[_]: Async: Console](
       for {
         _ <- loggerF.info(s"Starting ${BuildInfo.name} ${BuildInfo.version}...")
         repositories = RepositoryModule.make[D]()
-        services     = ServiceModule.make(repositories, transactor, loggerF)
+        services     = ServiceModule.make[F, D](repositories, transactor, loggerF)
         server <- HttpModule.make[F, M](services, environment.codecs, configs.server)
         stream = StreamModule.make[F, D](services, resources)
         _ <- PersistenceMigration.migrate(configs.database, loggerF)

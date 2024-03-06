@@ -4,19 +4,13 @@ import cats.effect.kernel.Clock
 import cats.effect.kernel.Temporal
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFunctorOps
-import io.scalaland.chimney.dsl._
 import org.tomohavvk.walker.EventConsumer
-import org.tomohavvk.walker.protocol.Types.AltitudeAccuracy
-import org.tomohavvk.walker.protocol.Types.Bearing
+
 import org.tomohavvk.walker.protocol.Types.Key
-import org.tomohavvk.walker.protocol.entities.DeviceLocationEntity
 import org.tomohavvk.walker.protocol.events.DeviceLocationEvent
 import org.tomohavvk.walker.protocol.events.Event
 import org.tomohavvk.walker.services.LocationService
 
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import fs2.kafka._
 
 import scala.concurrent.duration.DurationInt

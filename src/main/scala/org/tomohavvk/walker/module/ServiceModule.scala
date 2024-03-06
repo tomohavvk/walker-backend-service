@@ -1,8 +1,10 @@
 package org.tomohavvk.walker.module
 
-import cats.effect.kernel.Sync
+import cats.Monad
+
 import cats.mtl.Handle
 import io.odin.Logger
+import org.tomohavvk.walker.generation.TimeGen
 import org.tomohavvk.walker.module.RepositoryModule.RepositoriesDeps
 import org.tomohavvk.walker.persistence.Transactor
 import org.tomohavvk.walker.protocol.errors.AppError
@@ -22,13 +24,15 @@ object ServiceModule {
     deviceService:       DeviceService[F],
     groupService:        GroupService[F],
     devicesGroupService: DevicesGroupService[F])
+  case class WalkerException(message: String) extends Throwable
 
-  def make[F[_]: Sync, D[_]: Sync](
+  def make[F[_]: Monad, D[_]: Monad](
     repositoriesDeps: RepositoriesDeps[D],
     transactor:       Transactor[F, D],
     loggerF:          Logger[F]
-  )(implicit HF:      Handle[F, AppError],
-    HD:               Handle[D, AppError]
+  )(implicit HE:      Handle[F, AppError],
+    HD:               Handle[D, AppError],
+    T:                TimeGen[F]
   ): ServicesDeps[F] = {
     val locationService = new LocationServiceImpl[F, D](repositoriesDeps.deviceRepository,
                                                         repositoriesDeps.deviceLocationRepository,

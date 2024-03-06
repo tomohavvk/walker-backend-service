@@ -1,11 +1,9 @@
 package org.tomohavvk.walker.services
 
 import cats.Monad
-import cats.effect.kernel.Sync
 import cats.syntax.applicative._
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
-import cats.implicits.toFunctorOps
 import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
 import io.odin.Logger
@@ -28,29 +26,34 @@ trait DevicesGroupService[F[_]] {
   def joinGroup(deviceId: DeviceId, groupId: GroupId): F[DeviceGroupEntity]
 }
 
-class DeviceGroupServiceImpl[F[_]: Monad, D[_]: Sync](
+class DeviceGroupServiceImpl[F[_]: Monad, D[_]: Monad](
   groupRepo:       GroupRepository[D],
   deviceGroupRepo: DeviceGroupRepository[D],
   transactor:      Transactor[F, D],
   loggerF:         Logger[F]
-)(implicit HF:     Handle[F, AppError],
-  HD:              Handle[D, AppError])
+)(implicit
+  HD: Handle[D, AppError],
+  HE: Handle[F, AppError],
+  T:  TimeGen[F])
     extends DevicesGroupService[F] {
 
   override def joinGroup(deviceId: DeviceId, groupId: GroupId): F[DeviceGroupEntity] =
     loggerF.debug("Join group") >>
-      transactor
-        .withTxn {
-          groupRepo
-            .findById(groupId)
-            .flatMap(validate(deviceId, groupId, _))
-            .flatMap(joinDeviceToGroup(deviceId, _))
-            .flatTap(incrementCountDeviceInGroup)
+      TimeGen[F].genTimeUtc
+        .flatMap { now =>
+          transactor
+            .withTxn {
+              groupRepo
+                .findById(groupId)
+                .flatMap(validate(deviceId, groupId, _))
+                .flatMap(joinDeviceToGroup(deviceId, _, CreatedAt(now)))
+                .flatTap(incrementCountDeviceInGroup)
 
+            }
         }
         .handleWith[AppError] {
-          case _: UniqueConstraintError => HF.raise(BadRequestError("Already joined to the group"))
-          case error                    => HF.raise(error)
+          case _: UniqueConstraintError => HE.raise(BadRequestError("Already joined to the group"))
+          case error                    => HE.raise(error)
         }
         .flatTap(_ => loggerF.debug("Join group success"))
 
@@ -62,10 +65,8 @@ class DeviceGroupServiceImpl[F[_]: Monad, D[_]: Sync](
       case Some(group)                                    => group.pure[D]
     }
 
-  private def joinDeviceToGroup(deviceId: DeviceId, group: GroupEntity): D[DeviceGroupEntity] =
-    TimeGen[D].genTimeUtc
-      .map(now => DeviceGroupEntity(deviceId, group.id, CreatedAt(now)))
-      .flatMap(deviceGroupRepo.upsert)
+  private def joinDeviceToGroup(deviceId: DeviceId, group: GroupEntity, createdAt: CreatedAt): D[DeviceGroupEntity] =
+    deviceGroupRepo.upsert(DeviceGroupEntity(deviceId, group.id, createdAt))
 
   private def incrementCountDeviceInGroup(deviceGroup: DeviceGroupEntity): D[Unit] =
     groupRepo.incrementDeviceCount(deviceGroup.groupId, UpdatedAt(deviceGroup.createdAt.value))

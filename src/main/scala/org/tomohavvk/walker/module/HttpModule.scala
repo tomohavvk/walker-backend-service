@@ -5,8 +5,7 @@ import cats.effect.kernel.Ref
 import cats.effect.kernel.Sync
 import cats.implicits.toFunctorOps
 import cats.implicits.toSemigroupKOps
-import cats.mtl.Handle
-import cats.Monad
+import cats.Applicative
 import cats.~>
 import fs2.concurrent.Topic
 import io.odin.Logger
@@ -31,15 +30,14 @@ import sttp.tapir.server.interceptor.exception.DefaultExceptionHandler
 
 object HttpModule {
 
-  def make[F[_]: Monad, M[_]: Async](
+  def make[F[_], M[_]: Async](
     services:   ServicesDeps[F],
     codecs:     Codecs,
     config:     ServerConfig
   )(implicit U: UnliftF[F, M, AppError],
     LiftHF:     M ~> F,
-    HF:         Handle[F, AppError],
-    loggerM:    Logger[M],
-    loggerF:    Logger[F]
+    A:          Applicative[F],
+    loggerM:    Logger[M]
   ): F[HttpServer[F, M]] = {
     implicit val option: Http4sServerOptions[M] = makeOptions[M](codecs)
     val walkerEndpoints                         = new WalkerEndpoints(codecs.errorCodecs, codecs)

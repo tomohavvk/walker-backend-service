@@ -1,7 +1,6 @@
 package org.tomohavvk.walker.services
 
-import cats.effect.kernel.Clock
-import cats.effect.kernel.Sync
+import cats.Monad
 import cats.syntax.applicative._
 import cats.implicits.catsSyntaxFlatMapOps
 import cats.implicits.toFlatMapOps
@@ -24,11 +23,12 @@ trait DeviceService[F[_]] {
   def register(deviceId:  DeviceId, command: RegisterDeviceCommand): F[DeviceEntity]
 }
 
-class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
+class DeviceServiceImpl[F[_]: Monad, D[_]](
   deviceRepo:  DeviceRepository[D],
   transactor:  Transactor[F, D],
   loggerF:     Logger[F]
-)(implicit HF: Handle[F, AppError])
+)(implicit HE: Handle[F, AppError],
+  T:           TimeGen[F])
     extends DeviceService[F] {
 
   override def getDevice(deviceId: DeviceId): F[DeviceEntity] =
@@ -37,23 +37,21 @@ class DeviceServiceImpl[F[_]: Sync: Clock, D[_]: Sync](
         .withTxn(deviceRepo.findById(deviceId))
         .flatMap {
           case Some(device) => device.pure[F]
-          case None         => HF.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
+          case None         => HE.raise(NotFoundError(s"Device: ${deviceId.value} not found"))
         }
 
   override def register(deviceId: DeviceId, command: RegisterDeviceCommand): F[DeviceEntity] =
     loggerF.debug("Register device") >>
-      transactor
-        .withTxn {
-          TimeGen[D].genTimeUtc.flatMap { createdAt =>
-            deviceRepo
-              .upsert {
-                DeviceEntity(deviceId, command.name, CreatedAt(createdAt))
-              }
-          }
+      TimeGen[F].genTimeUtc
+        .flatMap { createdAt =>
+          transactor
+            .withTxn {
+              deviceRepo.upsert(DeviceEntity(deviceId, command.name, CreatedAt(createdAt)))
+            }
         }
         .handleWith[AppError] {
           case error: UniqueConstraintError =>
-            HF.raise(error.copy(message = "Device with same device_id already registered"))
-          case error => HF.raise(error)
+            HE.raise(error.copy(message = s"Device with same device id: ${deviceId.value} already registered"))
+          case error => HE.raise(error)
         }
 }

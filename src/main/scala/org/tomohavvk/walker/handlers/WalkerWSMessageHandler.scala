@@ -2,9 +2,7 @@ package org.tomohavvk.walker.handlers
 
 import cats.Functor
 import cats.implicits.toFunctorOps
-import cats.mtl.Handle
 import org.tomohavvk.walker.protocol.Types.DeviceId
-import org.tomohavvk.walker.protocol.errors.AppError
 import org.tomohavvk.walker.protocol.ws._
 import org.tomohavvk.walker.services.DevicesGroupService
 import org.tomohavvk.walker.services.GroupService
@@ -17,8 +15,7 @@ trait WalkerWSMessageHandler[F[_]] {
 class WalkerWSMessageHandlerImpl[F[_]: Functor](
   locationService:    LocationService[F],
   groupService:       GroupService[F],
-  deviceGroupService: DevicesGroupService[F]
-)(implicit HF:        Handle[F, AppError])
+  deviceGroupService: DevicesGroupService[F])
     extends WalkerWSMessageHandler[F] {
 
   override def handle(deviceId: DeviceId, message: WSMessageIn): F[WSMessageOut] =

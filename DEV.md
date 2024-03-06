@@ -30,3 +30,7 @@ kubectl exec -it deployments/kafka -- kafka-topics.sh --bootstrap-server kafka-s
 
 
 cd loadtests && bzt scenario.yml
+
+
+## DB
+- CREATE EXTENSION IF NOT EXISTS pg_stat_statements;

@@ -1,6 +1,5 @@
 package org.tomohavvk.walker.http.routes.api
 
-import cats.Monad
 import cats.effect._
 import cats.syntax.all._
 import fs2.Stream
@@ -28,7 +27,7 @@ import org.tomohavvk.walker.protocol.ws.WSError
 import org.tomohavvk.walker.protocol.ws.WSMessageIn
 import org.tomohavvk.walker.protocol.ws.WSMessageOut
 
-class WalkerWSApi[F[_]: Monad, M[_]: Monad](
+class WalkerWSApi[F[_], M[_]](
   deviceService:  DeviceService[F],
   messageHandler: WalkerWSMessageHandler[F],
   subscribers:    WSSubscribers[M],
